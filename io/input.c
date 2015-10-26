@@ -19,9 +19,9 @@ sizes_t line_number(char *file)
 	int len = 0;
 	FILE *f = fopen(file,"r");
 
-  if (f == NULL)
-    return numbers;
-  while(!feof(f))
+  	if (f == NULL)
+    	return numbers;
+  	while(!feof(f))
     {
       if(fgetc(f) == '\n')
     	{
@@ -35,10 +35,10 @@ sizes_t line_number(char *file)
 	  len++;
     	}	
     }
-  numbers.lines = lines;
-  numbers.chars = max_char;
-  fclose(f);
-  return numbers;
+	numbers.lines = lines;
+	numbers.chars = max_char;
+	fclose(f);
+	return numbers;
 }
 
 
