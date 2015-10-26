@@ -34,7 +34,7 @@ sizes_t line_number(char *file)
     		len++;
     	}	
     }
-    numbers.lines = lines+1;
+    numbers.lines = lines;
     numbers.chars = max_char;
     fclose(f);
 	return numbers;
@@ -52,13 +52,13 @@ int main(int argc, char **argv)
 	int num_lines = line_num.lines;
 	int max_char = line_num.chars;
 	
-	char *lines[8];
-	//char *lines[num_lines];
+	//char *lines[8];
+	char *lines[num_lines];
     char line[max_char];
     
     input_file = fopen(input, "r");
     
-    
+    //printf("The size of the input file: %lu\n", strlen(input_file));
     if (input_file == 0)
     {
         //fopen returns 0, the NULL pointer, on failure
