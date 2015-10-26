@@ -13,7 +13,7 @@ typedef struct sizes
 sizes_t line_number(char *file)
 {
 	sizes_t numbers;
-	int lines;
+	int lines = 0;
 	int max_char = 0;
 	int len = 0;
 	FILE *f = fopen(file,"r");
@@ -52,7 +52,7 @@ int main(int argc, char **argv)
 	int num_lines = line_num.lines;
 	int max_char = line_num.chars;
 	
-	//char *lines[8];
+
 	char *lines[num_lines];
     char line[max_char];
     
@@ -83,7 +83,7 @@ int main(int argc, char **argv)
     		printf("Line %i: %s\n", i, line);
     		int n;
     		//char line[max_char];
-    		//lines[i] = line;
+    		lines[i] = line;
 			i++;
     					
 		}
