@@ -6,10 +6,10 @@
  */
 
 typedef struct{
-  int variables[MAX_VAR_CNT / 4];
+  short variables[MAX_VAR_CNT / 4];
 }Clause;
 
 typedef struct{
   Clause clauses[MAX_CLAUSE_CNT / 4];
-  int all_vars[MAX_VAR_CNT*2];
+  short all_vars[MAX_VAR_CNT*2];
 }Formula;

@@ -56,7 +56,7 @@ int pick_var_from_formula(Formula *f){
 }
 
 int dpll(Formula *F){
-  int i;
+  short i;
 
   if(is_consistent_literals(F))
     return 1;
@@ -70,6 +70,6 @@ int dpll(Formula *F){
   eliminate_pure_literals(F);
   
   /* pick one variable v */
-  int v = pick_var_from_formula(F);
+  short v = pick_var_from_formula(F);
   return dpll(propagate_unit(F, v)) || dpll(propagate_unit(F, ((-1)*v)));
 }
