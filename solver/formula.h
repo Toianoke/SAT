@@ -6,7 +6,7 @@
  */
 
 typedef struct{
-  short variables[MAX_VAR_CNT / 4];
+  short variables[MAX_VAR_CNT / 2];
 }Clause;
 
 typedef struct{
