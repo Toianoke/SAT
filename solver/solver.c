@@ -1,10 +1,4 @@
-/*
- * var = 0 -> ignore var and val
- * otherwise,
- *   var is a variable in F,
- *   and val is the boolean value that all 
- *   instances of var will take
- */
+#include "formula.h"
 
 /*
  * returns 1 if f is composed only of
@@ -12,7 +6,7 @@
  * i.e. all clauses contain 1 variable and
  *      no two clauses contain a variable and its negation
  */
-int is_consistent_literals(Formula f){
+int is_consistent_literals(Formula *f){
   // TODO
   return 0;
 }
@@ -22,7 +16,7 @@ int is_consistent_literals(Formula f){
  *              that is empty
  *         0 otherwise
  */
-int contains_empty_clause(Formula f){
+int contains_empty_clause(Formula *f){
   // TODO
   return 0;
 }
@@ -42,7 +36,7 @@ int is_unit_clause(Clause c){
  *   if -i appears in c:
  *     remove -i from c
  */
-Formula propagate_unit(Formula f, int i){
+Formula* propagate_unit(Formula *f, int i){
   // TODO
 }
 
@@ -50,18 +44,19 @@ Formula propagate_unit(Formula f, int i){
  * for any variable v in F with a single polarity
  *   remove every clause in which v occurs
  */
-Formula eliminate_pure_literals(Formula f){
+void eliminate_pure_literals(Formula *f){
   // TODO
 }
 
 /*
  * return a variable that occurs in f
  */
-int pick_var_from_formula(Formula f){
+int pick_var_from_formula(Formula *f){
   // TODO
 }
 
-int dpll(Formula F){
+int dpll(Formula *F){
+  int i;
 
   if(is_consistent_literals(F))
     return 1;
@@ -69,12 +64,12 @@ int dpll(Formula F){
     return 0;
 
   for(i=0; i<MAX_CLAUSE_CNT/*change to length of F*/; i++)
-    if(is_unit_clause(F[i])
-       F = propagate_unit(F, F[i][0]);
+    if(is_unit_clause(F->clauses[i]))
+      propagate_unit(F, F->clauses->variables[0]);
 
-  F = eliminate_pure_literals(F);
+  eliminate_pure_literals(F);
   
   /* pick one variable v */
   int v = pick_var_from_formula(F);
-       return dpll(propagate_unit(v, F)) || dpll(propagate_unit(((-1)*v), F));
+  return dpll(propagate_unit(F, v)) || dpll(propagate_unit(F, ((-1)*v)));
 }
