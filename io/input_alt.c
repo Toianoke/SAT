@@ -1,6 +1,9 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+
 
 
 size_t count_lines(char * file_name, size_t * max_line_len)
@@ -68,6 +71,45 @@ int main(int argc, char ** argv)
     }
     c_i++;
   }
+  
+  
+  
+  
+  int i;
+  
+  for(i = 0; i <= line_count; i++)
+  {
+  	if(lines[i][0] == 'c')
+  		printf("Ignore comments.\n");
+  	else if(lines[i][0] == 'p')
+  	{
+  		char cl[strlen(lines[i])];
+  		//cl = strtok(lines[i], d);
+  		int j;
+  		for(j = 0; j <= strlen(lines[i]); j++)
+  		{
+  			//if(lines[i][j] == ' ')
+  			//{
+  			//	printf("Finding Space");
+  			//	lines[i][j] = '\n';
+  			
+  			//}
+  		}
+  		//cl = strtok(lines[i], "\n");
+  		//for(j = 0; j <= strlen(lines[i]); j++)
+  		//{
+  		//	printf("%i\n", j);
+  		
+  		//}	
+  	}
+  	else
+  	{
+  		
+  	
+  	}
+  }
+  
+  //free(lines);
   fclose(fp);
   return 0;
 }
