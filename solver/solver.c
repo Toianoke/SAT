@@ -1,5 +1,4 @@
 #include "formula.h"
-#include "solver.h"
 
 /*
  * returns 1 if f is composed only of

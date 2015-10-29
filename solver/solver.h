@@ -1,3 +1,5 @@
+#include "formula.h"
+
 int is_consistent_literals(Formula*);
 
 int contains_empty_clause(Formula*);
