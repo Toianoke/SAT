@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 
 
@@ -79,37 +80,51 @@ int main(int argc, char ** argv)
   
   for(i = 0; i <= line_count; i++)
   {
+  	//printf("The index: %i and size: %lu\n", i, line_count);
   	if(lines[i][0] == 'c')
   		printf("Ignore comments.\n");
   	else if(lines[i][0] == 'p')
   	{
-  		char cl[strlen(lines[i])];
-  		//cl = strtok(lines[i], d);
-  		int j;
-  		for(j = 0; j <= strlen(lines[i]); j++)
-  		{
-  			//if(lines[i][j] == ' ')
-  			//{
-  			//	printf("Finding Space");
-  			//	lines[i][j] = '\n';
-  			
-  			//}
-  		}
-  		//cl = strtok(lines[i], "\n");
-  		//for(j = 0; j <= strlen(lines[i]); j++)
+  		//char *def_line;
+  		//def_line = (char *) malloc(sizeof(char)*strlen(lines[i]));
+  		//
+  		////printf("Inside the second line\n");
+  		//int j;
+  		//for(j = 0; j <= sizeof(lines[i]); j++)
   		//{
-  		//	printf("%i\n", j);
-  		
-  		//}	
+  		//	if(lines[i][j] == ' ')
+  		//	{
+  		//		def_line[j] = ' ';
+  		//	
+  		//	}
+  		//	else
+  		//	{
+  		//		def_line[j] = lines[i][j];
+  		//	
+  		//	}
+  		//	
+  		//}
+  		//printf("The definition line: %s\n", def_line);
+  		char *split;
+  		split = strtok(lines[i]," ");
+  		while(split != NULL)
+  		{	
+  			//if(isdigit(split) == 
+  			if(isdigit(split))
+  			{
+  				printf("%s\n",split);
+  			}
+
+  			split = strtok(NULL, " ");
+  			//printf("The variables: %c, %c \n", split[2], split[3]);
+  			
+  			
+  		}
   	}
-  	else
-  	{
-  		
   	
-  	}
   }
   
-  //free(lines);
+  
   fclose(fp);
   return 0;
 }
