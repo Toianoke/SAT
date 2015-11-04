@@ -16,14 +16,16 @@ typedef struct{
 */
 typedef enum { false, true } bool;
 
+/*
 typedef struct{
 	int ID;
 	bool sign;
 }Literal;
+*/
 
 typedef struct{
 	int num_lits;
-	Literal *Lits;
+	short *literals;
 }Clause;
 
 typedef struct{
