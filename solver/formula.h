@@ -4,7 +4,7 @@
  * do we know how many clauses we will have?
  * and do we know how many variables in each clause?
  */
-
+/*
 typedef struct{
   short variables[MAX_VAR_CNT / 2];
 }Clause;
@@ -13,3 +13,21 @@ typedef struct{
   Clause clauses[MAX_CLAUSE_CNT / 4];
   short all_vars[MAX_VAR_CNT*2];
 }Formula;
+*/
+typedef enum { false, true } bool;
+
+typedef struct{
+	int ID;
+	bool sign;
+}Literal;
+
+typedef struct{
+	int num_lits;
+	Literal *Lits;
+}Clause;
+
+typedef struct{
+	int num_clauses;
+	Clause *clauses;
+}Formula;
+
