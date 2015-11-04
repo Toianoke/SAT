@@ -8,6 +8,7 @@
  *Helper function that returns a literal
  *which is identical to lit but with an inverted sign.
  */
+/*
 Literal negated(Literal lit)
 {
 	Literal new_lit;
@@ -15,16 +16,19 @@ Literal negated(Literal lit)
     new_lit.sign = !lit.sign;
 	return new_lit;
 }
+*/
 
 /*
  *Helper function that determines if two literals are equal,
  * Two literals are equal if they have the same ID and the same
  * sign.
  */
+/*
 int equals(Literal lit1, Literal lit2)
 {
 	return ((lit1.ID == lit2.ID) && (lit1.sign == lit2.sign));
 }
+*/
 
 /*
  * returns 1 if f is composed only of
@@ -38,7 +42,7 @@ int is_consistent_literals(Formula *f){
   //Check the length of all clauses
   for(i = 0; i < f->num_clauses; i++)
   {
-    if(cp->num_lits != 1)
+    if(cp++->num_lits != 1)
 	  return 0;
   }
 
@@ -49,8 +53,12 @@ int is_consistent_literals(Formula *f){
   {
 	  for (j = i; j < f->num_clauses; j++) {
 		  Clause* next = cp+1;
-		  if(equals(cp->Lits[0], negated(next->Lits[0]) ))
+		  if(cp->literals[0] + next->literals[0] == 0)
+		    return 0;
+		  /*
+		  if(equals(cp->literals[0], negated(next->literals[0]) ))
 			 return 0;
+		  */
 	  }
 	  cp++;
   }
@@ -63,13 +71,13 @@ int is_consistent_literals(Formula *f){
  *         0 otherwise
  */
 int contains_empty_clause(Formula *f){
-  // TODO
   int i;
+  Clause *cp = f->clauses;
+
   for(i = 0; i < f->num_clauses; i++)
   {
-	if(cp->num_lits == 0)
-		return 1;
-	
+	if(cp++->num_lits == 0)
+		return 1;	
   }
   return 0;
 }
@@ -79,18 +87,39 @@ int contains_empty_clause(Formula *f){
  *         0 otherwise
  */
 int is_unit_clause(Clause c){
-  //TODO
+  return c.num_lits == 1;
+}
+
+void delete_var(Formula *f, short v){
+  // iterate through each clause c in f
+  // if v in c
+  // remove v from c
+}
+
+void remove_var(short n, Clause *c){
+
 }
 
 /*
  * for each clause c in f:
- *   if i appears in c:
+ *   if n appears in c:
  *     remove c from f
- *   if -i appears in c:
- *     remove -i from c
+ *   if -n appears in c:
+ *     remove -n from c
  */
-Formula* propagate_unit(Formula *f, int i){
-  // TODO
+Formula* propagate_unit(Formula *f, short n){
+  short i, j;
+  Clause *c;
+
+  for(i=0; i<f->num_clauses; i++){
+    c = &f->clauses[i];
+    for(j=0; j<c->num_lits; j++){
+      if(c->literals[j] == n)
+	remove_clause(c, f);
+      if(c->literals[j] == (-1*n))
+	remove_var(n, c);
+    }
+  }
 }
 
 /*
@@ -105,6 +134,16 @@ void eliminate_pure_literals(Formula *f){
  * return a variable that occurs in f
  */
 int pick_var_from_formula(Formula *f){
+  // TODO
+}
+
+/*
+ * returns a new Formula with nv variables
+ * and nc clauses, where clauses is an array
+ * of arrays of shorts, representing each clause
+ * in the formula
+ */
+Formula* create_formula(short nv, short nc, short **clauses){
   // TODO
 }
 
@@ -127,6 +166,7 @@ int dpll(Formula *F){
   return dpll(propagate_unit(F, v)) || dpll(propagate_unit(F, ((-1)*v)));
 }
 
+
 int main(int argc, char *argv[])
 {
 	/*Crazy simple test case made to test is_consistent_literals()
@@ -144,23 +184,32 @@ int main(int argc, char *argv[])
   f->clauses = malloc(sizeof(Clause)*num_of_clauses);
   Clause *cp = f->clauses;
 
+
   for(i = 0; i < f->num_clauses; i++)
   {
 //	  printf("f->num_clauses: %d\n", f->num_clauses);
 	  cp->num_lits = lit_cnt[i];
-	  cp->Lits = malloc(sizeof(Literal)*cp->num_lits);
-	  cp->Lits[i].ID = vars[i];
-  	  cp->Lits[i].sign = false;
+	  cp->literals = malloc(sizeof(short)*cp->num_lits);
+	  cp->literals[i] = vars[i];
+	  /*
+	  cp->literals[i].ID = vars[i];
+  	  cp->literals[i].sign = false;
+	  */
 	  cp++;
   }
+  // test for is_consistent_literals
   printf("Expecting 1 from is_consistent_literals(): %d\n",
 		 is_consistent_literals(f));
+
+  // test for contains_empty_clause
+  printf("Expection 0 from contains_empty_clause, actual %d\n",
+	 contains_empty_clause(f));
 
   cp = f->clauses;
 
   for(i = 0; i < f->num_clauses; i++)
   {
-	free(cp->Lits);
+	free(cp->literals);
 	cp++;
   }
 
