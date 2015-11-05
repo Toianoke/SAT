@@ -90,14 +90,22 @@ int is_unit_clause(Clause c){
   return c.num_lits == 1;
 }
 
-void delete_var(Formula *f, short v){
-  // iterate through each clause c in f
-  // if v in c
-  // remove v from c
+void remove_var(short idx, Clause *c){
+  short j;
+
+  j = idx + 1;
+  while(j<c->num_lits)
+    c->literals[idx++] = c->literals[j++];
+  c->num_lits--;
 }
 
-void remove_var(short n, Clause *c){
+void remove_clause(short idx, Formula *f){
+  short j;
 
+  j = idx + 1;
+  while(j<f->num_clauses)
+    f->clauses->literals[idx++] = f->clauses->literals[j++];
+  f->num_clauses--;
 }
 
 /*
@@ -115,9 +123,9 @@ Formula* propagate_unit(Formula *f, short n){
     c = &f->clauses[i];
     for(j=0; j<c->num_lits; j++){
       if(c->literals[j] == n)
-	remove_clause(c, f);
-      if(c->literals[j] == (-1*n))
-	remove_var(n, c);
+	remove_clause(i, f);
+      else if(c->literals[j] == (-1*n))
+	remove_var(j, c);
     }
   }
 }
@@ -133,8 +141,8 @@ void eliminate_pure_literals(Formula *f){
 /*
  * return a variable that occurs in f
  */
-int pick_var_from_formula(Formula *f){
-  // TODO
+short pick_var_from_formula(Formula *f){
+  return f->clauses->literals[0];
 }
 
 /*
@@ -145,6 +153,13 @@ int pick_var_from_formula(Formula *f){
  */
 Formula* create_formula(short nv, short nc, short **clauses){
   // TODO
+}
+
+/*
+ * called from outside
+ */
+int solve(short nv, short nc, short **clauses){
+  return dpll(create_formula(nv, nc, clauses));
 }
 
 int dpll(Formula *F){
@@ -191,10 +206,6 @@ int main(int argc, char *argv[])
 	  cp->num_lits = lit_cnt[i];
 	  cp->literals = malloc(sizeof(short)*cp->num_lits);
 	  cp->literals[i] = vars[i];
-	  /*
-	  cp->literals[i].ID = vars[i];
-  	  cp->literals[i].sign = false;
-	  */
 	  cp++;
   }
   // test for is_consistent_literals
