@@ -6,11 +6,32 @@
 #include <errno.h>
 
 
+int check_dup(short ar[], short size)
+{
+	int i, j, dup = 0;
+	for(i = 0; i <= size; i++)
+	{
+		for(j = 0; j <= size; j++)
+		{
+			if(ar[i] != 0 && ar[j] !=0)
+			{
+				if(abs(ar[i]) == abs(ar[j]))
+					dup++;
+			}
+		}
+	}
+	if(dup > 0)
+		return 1;
+	else
+		return 0;
+}
+
 
 size_t count_lines(char * file_name, size_t * max_line_len)
 {
   	size_t lines = 0;
   	*max_line_len = 1;
+  	char last = 0;
 	
   	FILE *fp = fopen(file_name, "r");
 	
@@ -28,13 +49,18 @@ size_t count_lines(char * file_name, size_t * max_line_len)
 			*max_line_len = line_len;
   	    }
 	
-  	    if (fgetc(fp) == '\n') {
+		last = fgetc(fp);
+  	    if (last == '\n') {
 			lines++;
 			line_len = 1;
 		}
 	}
 	
   	fclose(fp);
+  	
+  	//if (last != '\n') {
+  	//lines++;
+  	//}
   	
   	return lines;
 }
@@ -49,10 +75,10 @@ int main(int argc, char ** argv)
   
   	size_t max_line_len;
   	size_t line_count = count_lines(argv[1], &max_line_len);
-  	//printf("Line count: %lu\nMax line len: %lu\n", line_count, max_line_len);
+  	printf("Line count: %lu\nMax line len: %lu\n", line_count, max_line_len);
   
   	char *lines[line_count];
-  	int **clauses;
+  	short **clauses;
   	for (size_t i=0; i<= line_count; i++) 
   	{
     	lines[i] = (char *) malloc(sizeof(char)*max_line_len);
@@ -69,10 +95,10 @@ int main(int argc, char ** argv)
     	return 0; // file error (but we have to return 0)
   	}
   	size_t c_i = 0;
-  	for (size_t i=0; i<line_count;) 
+  	for (size_t i=0; i < line_count;) 
   	{
     	lines[i][c_i] = fgetc(fp);
-    	if (lines[i][c_i] == '\n') 
+    	if (lines[i][c_i] == '\n' || lines[i][c_i] == '\0') 
     	{
       		lines[i][c_i+1] = '\0';
       		printf("Line %lu: %s", i, lines[i]);
@@ -117,12 +143,12 @@ int main(int argc, char ** argv)
   			if((var_cnt != 0) && (cls_cnt != 0))
   			{
   				printf("Creating an array.\n");
-  				clauses = (int **)malloc(cls_cnt * sizeof(int*));
+  				clauses = (short **)malloc(cls_cnt * sizeof(short*));
   				int i, j;
   				for(i = 0; i < cls_cnt; i++)
-  					clauses[i] = (int *)malloc(var_cnt* sizeof(int));
+  					clauses[i] = (short *)malloc((var_cnt + 1)* sizeof(short));
   				for(i = 0; i < cls_cnt; i++)
-  					for(j = 0; j < var_cnt; j++)
+  					for(j = 0; j <= var_cnt+1; j++)
   					{
   						clauses[i][j] = 0;
   					
@@ -130,7 +156,7 @@ int main(int argc, char ** argv)
   					}
   				for(i = 0; i < cls_cnt; i++)
   				{
-  					for(j = 0; j < var_cnt; j++)
+  					for(j = 0; j <= var_cnt; j++)
   					{
   						printf(" %i ", clauses[i][j]);
   					
@@ -149,7 +175,7 @@ int main(int argc, char ** argv)
   			int num_tok = 0;
   			split = strtok(lines[i]," ");
   			
-  			int temp_clause[max_line_len];
+  			short temp_clause[max_line_len];
   			char* error;
   			while(split != NULL)
   			{	
@@ -164,14 +190,21 @@ int main(int argc, char ** argv)
   				
   				split = strtok(NULL, " ");	
   			}
+  			
+  			
+  			
+  			
+  			
+  			
+  			
+  			
   			int num = 0;
   			int i;
-  			
   			for(i = 0; i < num_tok; i++)
   			{
   				clauses[row][i] = temp_clause[i];
-  
   			}
+  			//}
   			printf("Size of array: %i\n", num_tok);
   			//printf("The index where the array is being saved: %i\n", num_clss);
   			int j;
@@ -182,15 +215,20 @@ int main(int argc, char ** argv)
   			printf("\n");
   			
   			
+  			
+  			
+  			
   			row++;
   		}
   		
   	}
   	printf("The final array with %i clauses and at the most %i variables in each clause:\n", cls_cnt, var_cnt);
   	int j;
+  	
+  	
   	for(i = 0; i < cls_cnt; i++)
   				{
-  					for(j = 0; j < var_cnt; j++)
+  					for(j = 0; j <= var_cnt; j++)
   					{
   						printf(" %i ", clauses[i][j]);
   					}
