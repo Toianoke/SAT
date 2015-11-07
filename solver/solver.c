@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/*git commit -m "To solver.c added code for is_consistent_literals. Added two new helper functions equals() and negated(). Added a main that tests is_consistent_literals with an absurdly simple test. To formula.h changed everything from arrays to pointers in order to manage memory more efficiently. Old code is simply commented out, in case we'd like to revert."*/
 
 /*
  *Helper function that returns a literal
@@ -152,30 +151,28 @@ short pick_var_from_formula(Formula *f){
  * in the formula
  */
 Formula* create_formula(short nv, short nc, short **in_clauses){
-  // I haven't tested yet! Also, we must remember to free these pointers later!!
   int i, j, count;
+  Clause *cp;
 
   Formula *f = malloc(sizeof(Formula));
   f->num_clauses = nc;
 
   f->clauses = malloc(sizeof(Clause)*nc);
-  Clause *cp = f->clauses;
+  cp = f->clauses;
 
   for(i = 0; i < f->num_clauses; i++)
   {
-	  count = 0;
-	  while(in_clauses[i][count] != 0)
-		  count++;
-	  
-	  cp->num_lits = count;
-	  
-	  for (j = 0; j < count; i++) {
-		  cp->literals = malloc(sizeof(short)*cp->num_lits);
-		  cp->literals[j] = in_clauses[i][j];		  
-	  }
-	  cp++;
-  }
+    count = 0;
+    while(in_clauses[i][count] != 0)
+	  count++;
   
+    cp->num_lits = count;
+
+    cp->literals = malloc(sizeof(short)*count);
+    for (j = 0; j < count; j++)
+	  f->clauses[i].literals[j] = in_clauses[i][j];		  
+    cp++;
+  }
   return f;
 }
 
