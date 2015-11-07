@@ -9,21 +9,22 @@
 int check_dup(short ar[], short size)
 {
 	int i, j, dup = 0;
-	for(i = 0; i <= size; i++)
+	for(i = 0; i < size; i++)
 	{
-		for(j = 0; j <= size; j++)
+		for(j = 0; j < size; j++)
 		{
-			if(ar[i] != 0 && ar[j] !=0)
+			if(ar[i] != 0 && ar[j] != 0 && i != j)
 			{
+				printf("Comparing %i and %i\n", abs(ar[i]), abs(ar[j]));
 				if(abs(ar[i]) == abs(ar[j]))
 					dup++;
 			}
 		}
 	}
-	if(dup > 0)
-		return 1;
-	else
+	if(dup == 0)
 		return 0;
+	else
+		return 1;
 }
 
 
@@ -193,7 +194,12 @@ int main(int argc, char ** argv)
   			
   			
   			
+  			if(check_dup(temp_clause, num_tok))
+  			{
+  				printf("ERROR\n");
+  				return -1;
   			
+  			}
   			
   			
   			
@@ -204,7 +210,7 @@ int main(int argc, char ** argv)
   			{
   				clauses[row][i] = temp_clause[i];
   			}
-  			//}
+  			
   			printf("Size of array: %i\n", num_tok);
   			//printf("The index where the array is being saved: %i\n", num_clss);
   			int j;
