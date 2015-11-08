@@ -129,12 +129,46 @@ Formula* propagate_unit(Formula *f, short n){
   }
 }
 
+int has_single_polarity(short v)
+{
+
+}
+
+/*
+ *Returns true if clause c contains variable v,
+ *false, otherwise.
+ */
+int contains(Clause *c, short v)
+{
+
+}
+
 /*
  * for any variable v in F with a single polarity
  *   remove every clause in which v occurs
  */
 void eliminate_pure_literals(Formula *f){
-  // TODO
+	/*This is how I'd like to propose writing eliminate_pure_literals.
+	 *It requires adding two new fields to Formula struct - variable_list
+	 *and variable_list_length. variable_list will be made in create_formula.
+	 *It will contain all the variables without any duplications (kind of like
+	 *Tony already suggested).
+	 */
+	int i, j;
+	short v, c_idx = 0;
+  Clause *cp = f->clauses;
+
+  for(i = 0; i < f->variable_list_length; i++)
+  {
+	  v = f->variable_list[i];
+	  if(has_single_polarity(v)){
+		  for(j = 0; j < f->num_clauses; j++){
+			  if(contains(cp++, v))
+				  remove_clause(c_idx++, f);
+		  }
+	  }
+  }
+  return 1;
 }
 
 /*
