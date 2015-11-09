@@ -129,18 +129,29 @@ Formula* propagate_unit(Formula *f, short n){
   }
 }
 
-int has_single_polarity(short v)
+int has_single_polarity(short v, Formula *f)
 {
-
+	int i;
+	
+	for (i = 0; i < f->vl_length; i++) {
+		if((v + f->var_list[i]) == 0)
+			return 0;
+	}
+	return 1;
 }
 
 /*
  *Returns true if clause c contains variable v,
  *false, otherwise.
  */
-int contains(Clause *c, short v)
+int clause_contains(Clause *c, short v)
 {
-
+	int i;
+	for (i = 0; i < c->num_lits; i++) {
+		if(c->literals[i] == v)
+			return 1;
+	}
+	return 0;
 }
 
 /*
@@ -149,26 +160,25 @@ int contains(Clause *c, short v)
  */
 void eliminate_pure_literals(Formula *f){
 	/*This is how I'd like to propose writing eliminate_pure_literals.
-	 *It requires adding two new fields to Formula struct - variable_list
-	 *and variable_list_length. variable_list will be made in create_formula.
+	 *It requires adding two new fields to Formula struct - var_list
+	 *and vl_length. variable_list will be made in create_formula.
 	 *It will contain all the variables without any duplications (kind of like
 	 *Tony already suggested).
 	 */
-	int i, j;
-	short v, c_idx = 0;
+  int i, j;
+  short v, c_idx = 0;
   Clause *cp = f->clauses;
 
-  for(i = 0; i < f->variable_list_length; i++)
+  for(i = 0; i < f->vl_length; i++)
   {
-	  v = f->variable_list[i];
-	  if(has_single_polarity(v)){
+	  v = f->var_list[i];
+	  if(has_single_polarity(v, f)){
 		  for(j = 0; j < f->num_clauses; j++){
-			  if(contains(cp++, v))
+			  if(clause_contains(cp++, v))
 				  remove_clause(c_idx++, f);
 		  }
 	  }
   }
-  return 1;
 }
 
 /*
@@ -178,6 +188,15 @@ short pick_var_from_formula(Formula *f){
   return f->clauses->literals[0];
 }
 
+int array_contains(short *arr, short length, short item)
+{
+	int i;
+	for (i = 0; i < length; i++) {
+		if(arr[i] == item)
+			return 1;
+	}
+	return 0;
+}
 /*
  * returns a new Formula with nv variables
  * and nc clauses, where clauses is an array
@@ -185,15 +204,18 @@ short pick_var_from_formula(Formula *f){
  * in the formula
  */
 Formula* create_formula(short nv, short nc, short **in_clauses){
-  int i, j, count;
+  int i, j, k, count;
   Clause *cp;
 
   Formula *f = malloc(sizeof(Formula));
   f->num_clauses = nc;
+  f->vl_length = nv;//new
+  f->var_list = malloc(sizeof(short)*nv);//new
 
   f->clauses = malloc(sizeof(Clause)*nc);
   cp = f->clauses;
 
+  k = 0;
   for(i = 0; i < f->num_clauses; i++)
   {
     count = 0;
@@ -203,8 +225,13 @@ Formula* create_formula(short nv, short nc, short **in_clauses){
     cp->num_lits = count;
 
     cp->literals = malloc(sizeof(short)*count);
-    for (j = 0; j < count; j++)
-	  f->clauses[i].literals[j] = in_clauses[i][j];		  
+    for (j = 0; j < count; j++){
+	  f->clauses[i].literals[j] = in_clauses[i][j];
+	  if(!array_contains(f->var_list, k, in_clauses[i][j])){
+		  f->var_list[k] = in_clauses[i][j];
+		  k++;
+	  }
+	}
     cp++;
   }
   return f;
@@ -239,15 +266,20 @@ int dpll(Formula *F){
 
 int main(int argc, char *argv[])
 {
-	/*Crazy simple test case made to test is_consistent_literals()
-	  where there are only 2 clauses. Each clause is a unit clause, i.e. has
-	only one literal. The literals are ID=2, sign = false; ID= 3, sign = false.*/
   int i;
   int num_of_clauses = 2;
   int lit_cnt[2] = {1,1};
   int vars[2] = {2,3};
 
+  short in_clauses[4][5] = {{1,2,3,4,0},
+						{5,6,7,8,0},
+						{9,10,11,12,0},
+						{13,14,14,15,0}
+  };
 
+  Formula *f = create_formula(15,4, in_clauses);
+
+/*
   Formula *f = malloc(sizeof(Formula));
   f->num_clauses = num_of_clauses;
 
@@ -269,9 +301,9 @@ int main(int argc, char *argv[])
 
   // test for contains_empty_clause
   printf("Expection 0 from contains_empty_clause, actual %d\n",
-	 contains_empty_clause(f));
+	 contains_empty_clause(f));*/
 
-  cp = f->clauses;
+  Clause *cp = f->clauses;
 
   for(i = 0; i < f->num_clauses; i++)
   {
@@ -279,6 +311,7 @@ int main(int argc, char *argv[])
 	cp++;
   }
 
+  free(f->var_list);
   free(f->clauses);
   free(f);
 
