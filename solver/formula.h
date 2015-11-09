@@ -14,14 +14,6 @@ typedef struct{
   short all_vars[MAX_VAR_CNT*2];
 }Formula;
 */
-typedef enum { false, true } bool;
-
-/*
-typedef struct{
-	int ID;
-	bool sign;
-}Literal;
-*/
 
 typedef struct{
 	int num_lits;
@@ -31,5 +23,9 @@ typedef struct{
 typedef struct{
 	int num_clauses;
 	Clause *clauses;
+	//var_list - list of all variables and their negations if they occur
+	//does not have any duplicates.
+	short *var_list;
+	short vl_length;
 }Formula;
 
