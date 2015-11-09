@@ -15,7 +15,7 @@ int check_dup(short ar[], short size)
 		{
 			if(ar[i] != 0 && ar[j] != 0 && i != j)
 			{
-				printf("Comparing %i and %i\n", abs(ar[i]), abs(ar[j]));
+				//printf("Comparing %i and %i\n", abs(ar[i]), abs(ar[j]));
 				if(abs(ar[i]) == abs(ar[j]))
 					dup++;
 			}
@@ -71,12 +71,13 @@ int main(int argc, char ** argv)
 {
 	if (argc < 2)
   	{
+  		printf("Error!");
 		return 0; // argument error (but we have to return 0)
   	}
   
   	size_t max_line_len;
   	size_t line_count = count_lines(argv[1], &max_line_len);
-  	printf("Line count: %lu\nMax line len: %lu\n", line_count, max_line_len);
+  	//printf("Line count: %lu\nMax line len: %lu\n", line_count, max_line_len);
   
   	char *lines[line_count];
   	short **clauses;
@@ -93,6 +94,7 @@ int main(int argc, char ** argv)
   	FILE *fp = fopen(argv[1], "r");
   	if (fp == NULL) 
   	{
+  		printf("Error!");
     	return 0; // file error (but we have to return 0)
   	}
   	size_t c_i = 0;
@@ -102,7 +104,7 @@ int main(int argc, char ** argv)
     	if (lines[i][c_i] == '\n' || lines[i][c_i] == '\0') 
     	{
       		lines[i][c_i+1] = '\0';
-      		printf("Line %lu: %s", i, lines[i]);
+      		//printf("Line %lu: %s", i, lines[i]);
       		c_i = -1;
       		i++;
     	}
@@ -110,17 +112,30 @@ int main(int argc, char ** argv)
   	}
   
   	int i, cls_cnt, var_cnt, temp, first = 1;
-  	int comments = 0;
+  	int com_done = 0;
+  	int init_set = 0;
   	int num_clss = 0;
   	int row = 0;
   	for(i = 0; i <= line_count; i++)
   	{
   		//printf("The index: %i and size: %lu\n", i, line_count);
   		if(lines[i][0] == 'c')
-  			comments++;
+  		{
+  			if(com_done == 1)
+  			{
+  				printf("ERROR: Comment!\n");
+  				return -1;
+  			}
+  		}
   		else if(lines[i][0] == 'p')
   		{
-  			
+  			com_done = 1;
+  			if(init_set == 1)
+  			{
+  				printf("ERROR already init!\n");
+  				return -1;
+  			}
+  			init_set = 1;
   			char *split;
   			split = strtok(lines[i]," ");
   			char* error;
@@ -143,7 +158,8 @@ int main(int argc, char ** argv)
   			}
   			if((var_cnt != 0) && (cls_cnt != 0))
   			{
-  				printf("Creating an array.\n");
+  				
+  				//printf("Creating an array.\n");
   				clauses = (short **)malloc(cls_cnt * sizeof(short*));
   				int i, j;
   				for(i = 0; i < cls_cnt; i++)
@@ -155,16 +171,16 @@ int main(int argc, char ** argv)
   					
   					
   					}
-  				for(i = 0; i < cls_cnt; i++)
-  				{
-  					for(j = 0; j <= var_cnt; j++)
-  					{
-  						printf(" %i ", clauses[i][j]);
-  					
-  					
-  					}
-  					printf("\n");
-  				}
+  				//for(i = 0; i < cls_cnt; i++)
+  				//{
+  				//	for(j = 0; j <= var_cnt; j++)
+  				//	{
+  				//		printf(" %i ", clauses[i][j]);
+  				//	
+  				//	
+  				//	}
+  				//	printf("\n");
+  				//}
   				
   				
   			//
@@ -172,6 +188,11 @@ int main(int argc, char ** argv)
   		}
   		else if((isdigit(lines[i][0])) || (lines[i][0] == '-'))
   		{
+  			if(init_set != 1)
+  			{
+  				printf("ERROR not init!\n");
+  				return -1;
+  			}
   			char *split;
   			int num_tok = 0;
   			split = strtok(lines[i]," ");
@@ -184,6 +205,12 @@ int main(int argc, char ** argv)
   				temp = strtoll(split, &error, 10);
   				if(temp != 0)
   				{
+  					if(abs(temp) > var_cnt)
+  					{
+  						printf("ERROR!\n");
+  						return -1;
+  					}
+  				
   					temp_clause[num_tok] = temp;
   					//printf("The num: %i index: %i\n", temp_clause[num_tok], num_tok);
   					num_tok++;
@@ -211,14 +238,14 @@ int main(int argc, char ** argv)
   				clauses[row][i] = temp_clause[i];
   			}
   			
-  			printf("Size of array: %i\n", num_tok);
+  			//printf("Size of array: %i\n", num_tok);
   			//printf("The index where the array is being saved: %i\n", num_clss);
-  			int j;
-  			for(j = 0; j < num_tok; j++)
-  			{
-  				printf(" %i ", clauses[row][j]);
-  			}
-  			printf("\n");
+  			//int j;
+  			//for(j = 0; j < num_tok; j++)
+  			//{
+  			//	printf(" %i ", clauses[row][j]);
+  			//}
+  			//printf("\n");
   			
   			
   			
@@ -233,13 +260,13 @@ int main(int argc, char ** argv)
   	
   	
   	for(i = 0; i < cls_cnt; i++)
-  				{
-  					for(j = 0; j <= var_cnt; j++)
-  					{
-  						printf(" %i ", clauses[i][j]);
-  					}
-  					printf("\n");
-  				}
+  	{
+  		for(j = 0; j <= var_cnt; j++)
+  		{
+  			printf(" %i ", clauses[i][j]);
+  		}
+  		printf("\n");
+  	}
   
   fclose(fp);
   return 0;
