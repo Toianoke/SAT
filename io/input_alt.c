@@ -4,7 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
-
+#include "solver.h"
 
 int check_dup(short ar[], short size)
 {
@@ -267,7 +267,20 @@ int main(int argc, char ** argv)
   		}
   		printf("\n");
   	}
+  	if(solve(var_cnt, cls_cnt, clauses))
+  	{
+  		printf("SOLVABLE");
+  		return 0;
+  	}
+  	else
+  	{
+  		printf("UNSOLVABLE");
+  		return 0;
+  	
+  	}
   
-  fclose(fp);
-  return 0;
+  
+  
+  	fclose(fp);
+  	return 0;
 }

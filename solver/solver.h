@@ -13,3 +13,7 @@ void eliminate_pure_literal(Formula*);
 int pick_var_from_formula(Formula*);
 
 int dpll(Formula*);
+
+int solve(short, short, short**);
+
+Formula* create_formula(short, short, short**);
