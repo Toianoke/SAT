@@ -4,7 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
-#include "solver.h"
+//#include "solver.h"
 
 int check_dup(short ar[], short size)
 {
@@ -246,15 +246,18 @@ int main(int argc, char ** argv)
   			//	printf(" %i ", clauses[row][j]);
   			//}
   			//printf("\n");
-  			
-  			
-  			
-  			
-  			
   			row++;
   		}
-  		
   	}
+  	
+  	
+  	for(i = 0; i <= line_count; i++)
+  	{
+  		printf("freeing line\n");
+  		free(lines[i]);
+  	}
+  	
+  	
   	printf("The final array with %i clauses and at the most %i variables in each clause:\n", cls_cnt, var_cnt);
   	int j;
   	
@@ -267,19 +270,24 @@ int main(int argc, char ** argv)
   		}
   		printf("\n");
   	}
-  	if(solve(var_cnt, cls_cnt, clauses))
-  	{
-  		printf("SOLVABLE");
-  		return 0;
-  	}
-  	else
-  	{
-  		printf("UNSOLVABLE");
-  		return 0;
-  	
-  	}
+  	//if(solve(var_cnt, cls_cnt, clauses))
+  	//{
+  	//	printf("SOLVABLE");
+  	//	return 0;
+  	//}
+  	//else
+  	//{
+  	//	printf("UNSOLVABLE");
+  	//	return 0;
+  	//
+  	//}
   
-  
+  	for(i = 0; i < cls_cnt; i++)
+  	{
+  		printf("freeing clause\n");
+  		free(clauses[i]);
+  	}
+  	free(clauses);
   
   	fclose(fp);
   	return 0;
