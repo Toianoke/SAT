@@ -8,7 +8,7 @@ main()
   short * cl1[5] = {-1, 5, 3, 4, 0};
   short * cl2[3] = {-3, -4, 0};
   short * cl3[5] = {-1, 4, 5, -6, 0};
-  short ** clauses[4] = {cl1, cl2, cl3, cl4};
+  short ** clauses[4] = {cl0, cl1, cl2, cl3};
   
   if (solve(6, 4, clauses)) {
     printf("SATISFIABLE");
