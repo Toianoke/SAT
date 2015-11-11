@@ -251,10 +251,10 @@ int dpll(Formula *F){
     return 1;
   if(contains_empty_clause(F))
     return 0;
-
-  //for(i=0; i<MAX_CLAUSE_CNT/*change to length of F*/; i++)
-  //if(is_unit_clause(F->clauses[i]))
-  //propagate_unit(F, F->clauses->variables[0]);
+  
+  for(i=0; i<F->num_clauses; i++)
+    if(is_unit_clause(F->clauses[i]))
+      propagate_unit(F, F->clauses->literals[0]);
 
   eliminate_pure_literals(F);
   
@@ -263,7 +263,7 @@ int dpll(Formula *F){
   return dpll(propagate_unit(F, v)) || dpll(propagate_unit(F, ((-1)*v)));
 }
 
-
+/*
 int main(int argc, char *argv[])
 {
   int i;
@@ -301,7 +301,7 @@ int main(int argc, char *argv[])
 
   // test for contains_empty_clause
   printf("Expection 0 from contains_empty_clause, actual %d\n",
-	 contains_empty_clause(f));*/
+	 contains_empty_clause(f));
 
   Clause *cp = f->clauses;
 
@@ -318,3 +318,4 @@ int main(int argc, char *argv[])
   return 0;
 }
 
+*/

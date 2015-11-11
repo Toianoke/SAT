@@ -4,7 +4,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
-//#include "solver.h"
+#include "solver.h"
 
 int check_dup(short ar[], short size)
 {
@@ -81,7 +81,8 @@ int main(int argc, char ** argv)
   
   	char *lines[line_count];
   	short **clauses;
-  	for (size_t i=0; i<= line_count; i++) 
+	size_t i;
+  	for (i=0; i<= line_count; i++) 
   	{
     	lines[i] = (char *) malloc(sizeof(char)*max_line_len);
 
@@ -98,7 +99,7 @@ int main(int argc, char ** argv)
     	return 0; // file error (but we have to return 0)
   	}
   	size_t c_i = 0;
-  	for (size_t i=0; i < line_count;) 
+  	for (i=0; i < line_count;) 
   	{
     	lines[i][c_i] = fgetc(fp);
     	if (lines[i][c_i] == '\n' || lines[i][c_i] == '\0') 
@@ -111,7 +112,7 @@ int main(int argc, char ** argv)
     	c_i++;
   	}
   
-  	int i, cls_cnt, var_cnt, temp, first = 1;
+  	int /*i,*/ cls_cnt, var_cnt, temp, first = 1;
   	int com_done = 0;
   	int init_set = 0;
   	int num_clss = 0;
@@ -270,17 +271,18 @@ int main(int argc, char ** argv)
   		}
   		printf("\n");
   	}
-  	//if(solve(var_cnt, cls_cnt, clauses))
-  	//{
-  	//	printf("SOLVABLE");
-  	//	return 0;
-  	//}
-  	//else
-  	//{
-  	//	printf("UNSOLVABLE");
-  	//	return 0;
-  	//
-  	//}
+	// tt uncommented Nov 11 16:06
+  	if(solve(var_cnt, cls_cnt, clauses))
+  	{
+  		printf("SOLVABLE");
+  		return 0;
+  	}
+  	else
+  	{
+  		printf("UNSOLVABLE");
+  		return 0;
+  	
+  	}
   
   	for(i = 0; i < cls_cnt; i++)
   	{
