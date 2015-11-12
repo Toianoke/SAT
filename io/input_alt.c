@@ -4,8 +4,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
-#include "solver.h"
-
+#include "solver.c"
+#define MAX_NUM 65536
 int check_dup(short ar[], short size)
 {
 	int i, j, dup = 0;
@@ -143,6 +143,11 @@ int main(int argc, char ** argv)
   			while(split != NULL)
   			{
   				temp = strtoll(split, &error, 10);
+  				if(temp >= MAX_NUM)
+  				{
+  					printf("ERROR!");
+  				
+  				}
 				if (temp != 0)
 				{
 					if(first == 1)
