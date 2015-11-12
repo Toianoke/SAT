@@ -71,6 +71,8 @@ int is_consistent_literals(Formula *f){
  *         0 otherwise
  */
 int contains_empty_clause(Formula *f){
+  assert(f != NULL);
+
   int i;
   Clause *cp = f->clauses;
 
@@ -91,6 +93,8 @@ int is_unit_clause(Clause c){
 }
 
 void remove_var(short idx, Clause *c){
+  assert(c != NULL);
+
   short j;
 
   j = idx + 1;
@@ -100,6 +104,8 @@ void remove_var(short idx, Clause *c){
 }
 
 void remove_clause(short idx, Formula *f){
+  assert(f != NULL);
+
   short j;
 
   j = idx + 1;
@@ -116,6 +122,8 @@ void remove_clause(short idx, Formula *f){
  *     remove -n from c
  */
 Formula* propagate_unit(Formula *f, short n){
+  assert(f != NULL);
+
   short i, j;
   Clause *c;
   Formula *fn;
@@ -140,10 +148,14 @@ Formula* propagate_unit(Formula *f, short n){
 	remove_var(j, c);
     }
   }
+
+  return fn;
 }
 
 int has_single_polarity(short v, Formula *f)
 {
+  assert(f != NULL);
+
 	int i;
 	
 	for (i = 0; i < f->vl_length; i++) {
@@ -159,6 +171,8 @@ int has_single_polarity(short v, Formula *f)
  */
 int clause_contains(Clause *c, short v)
 {
+  assert(c != NULL);
+
 	int i;
 	for (i = 0; i < c->num_lits; i++) {
 		if(c->literals[i] == v)
@@ -172,6 +186,7 @@ int clause_contains(Clause *c, short v)
  *   remove every clause in which v occurs
  */
 void eliminate_pure_literals(Formula *f){
+  assert(f != NULL);
 	/*This is how I'd like to propose writing eliminate_pure_literals.
 	 *It requires adding two new fields to Formula struct - var_list
 	 *and vl_length. variable_list will be made in create_formula.
@@ -198,11 +213,15 @@ void eliminate_pure_literals(Formula *f){
  * return a variable that occurs in f
  */
 short pick_var_from_formula(Formula *f){
+  assert(f != NULL);
+
   return f->clauses->literals[0];
 }
 
 int array_contains(short *arr, short length, short item)
 {
+  assert(arr != NULL);
+
 	int i;
 	for (i = 0; i < length; i++) {
 		if(arr[i] == item)
@@ -218,6 +237,8 @@ int array_contains(short *arr, short length, short item)
  * in the formula
  */
 Formula* create_formula(short nv, short nc, short **in_clauses){
+  assert(in_clauses != NULL);
+
   int i, j, k, count;
   Clause *cp;
 
@@ -253,9 +274,18 @@ Formula* create_formula(short nv, short nc, short **in_clauses){
 
 
 
+/*
+ * called from outside
+ */
+int solve(short nv, short nc, short **clauses){
+  assert(clauses != NULL);
+
+  return dpll(create_formula(nv, nc, clauses));
+}
+
+
 int dpll(Formula *F){
   assert(F != NULL);
-  printf("dpll\n");
 
   short i;
 
@@ -276,66 +306,3 @@ int dpll(Formula *F){
 }
 
 
-/*
- * called from outside
- */
-int solve(short nv, short nc, short **clauses){
-  return dpll(create_formula(nv, nc, clauses));
-}
-
-/*
-int main(int argc, char *argv[])
-{
-  int i;
-  int num_of_clauses = 2;
-  int lit_cnt[2] = {1,1};
-  int vars[2] = {2,3};
-
-  short in_clauses[4][5] = {{1,2,3,4,0},
-						{5,6,7,8,0},
-						{9,10,11,12,0},
-						{13,14,14,15,0}
-  };
-
-  Formula *f = create_formula(15,4, in_clauses);
-
-
-  Formula *f = malloc(sizeof(Formula));
-  f->num_clauses = num_of_clauses;
-
-  f->clauses = malloc(sizeof(Clause)*num_of_clauses);
-  Clause *cp = f->clauses;
-
-
-  for(i = 0; i < f->num_clauses; i++)
-  {
-//	  printf("f->num_clauses: %d\n", f->num_clauses);
-	  cp->num_lits = lit_cnt[i];
-	  cp->literals = malloc(sizeof(short)*cp->num_lits);
-	  cp->literals[i] = vars[i];
-	  cp++;
-  }
-  // test for is_consistent_literals
-  printf("Expecting 1 from is_consistent_literals(): %d\n",
-		 is_consistent_literals(f));
-
-  // test for contains_empty_clause
-  printf("Expection 0 from contains_empty_clause, actual %d\n",
-	 contains_empty_clause(f));
-
-  Clause *cp = f->clauses;
-
-  for(i = 0; i < f->num_clauses; i++)
-  {
-	free(cp->literals);
-	cp++;
-  }
-
-  free(f->var_list);
-  free(f->clauses);
-  free(f);
-
-  return 0;
-}
-
-*/
