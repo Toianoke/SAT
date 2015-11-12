@@ -1,7 +1,7 @@
 #include "formula.h"
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <assert.h>
 
 /*
  *Helper function that returns a literal
@@ -36,6 +36,7 @@ int equals(Literal lit1, Literal lit2)
  *      no two clauses contain a variable and its negation
  */
 int is_consistent_literals(Formula *f){
+  assert(f != NULL);
   int i,j;
   Clause *cp = f->clauses;
   //Check the length of all clauses
@@ -117,12 +118,24 @@ void remove_clause(short idx, Formula *f){
 Formula* propagate_unit(Formula *f, short n){
   short i, j;
   Clause *c;
+  Formula *fn;
+  short **lits;
 
+  // suspicious code START
+  lits = malloc(sizeof(short*)*f->num_clauses);
   for(i=0; i<f->num_clauses; i++){
-    c = &f->clauses[i];
+    lits[i] = malloc(sizeof(short)*(f)->clauses[i].num_lits);
+    for(j=0; j<f->clauses[i].num_lits; j++)
+      lits[i][j] = f->clauses[i].literals[j];
+  }
+  fn = create_formula(f->vl_length, f->num_clauses, lits);
+  // suspicious code END
+
+  for(i=0; i<fn->num_clauses; i++){
+    c = &fn->clauses[i];
     for(j=0; j<c->num_lits; j++){
       if(c->literals[j] == n)
-	remove_clause(i, f);
+	remove_clause(i, fn);
       else if(c->literals[j] == (-1*n))
 	remove_var(j, c);
     }
@@ -197,6 +210,7 @@ int array_contains(short *arr, short length, short item)
 	}
 	return 0;
 }
+
 /*
  * returns a new Formula with nv variables
  * and nc clauses, where clauses is an array
@@ -245,6 +259,9 @@ int solve(short nv, short nc, short **clauses){
 }
 
 int dpll(Formula *F){
+  assert(F != NULL);
+  printf("dpll\n");
+
   short i;
 
   if(is_consistent_literals(F))

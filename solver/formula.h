@@ -16,12 +16,12 @@ typedef struct{
 */
 
 typedef struct{
-	int num_lits;
+	short num_lits;
 	short *literals;
 }Clause;
 
 typedef struct{
-	int num_clauses;
+	short num_clauses;
 	Clause *clauses;
 	//var_list - list of all variables and their negations if they occur
 	//does not have any duplicates.
@@ -29,3 +29,4 @@ typedef struct{
 	short vl_length;
 }Formula;
 
+Formula *create_formula(short, short, short**);
