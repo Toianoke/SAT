@@ -109,6 +109,7 @@ void remove_clause(short idx, Formula *f){
   short j;
 
   j = idx + 1;
+  // IB seems to be removing literals instead of a clause
   while(j<f->num_clauses)
     f->clauses->literals[idx++] = f->clauses->literals[j++];
   f->num_clauses--;
