@@ -4,7 +4,8 @@
 #include <string.h>
 #include <ctype.h>
 #include <errno.h>
-#include "solver.c"
+#include "solver.h"
+
 #define MAX_NUM 65536
 int check_dup(short ar[], short size)
 {

@@ -1,3 +1,6 @@
+#ifndef FORMULA_H
+#define FORMULA_H
+
 #define MAX_CLAUSE_CNT 65536
 #define MAX_VAR_CNT    65536
 /* talk to the other dudes,
@@ -30,3 +33,5 @@ typedef struct{
 }Formula;
 
 Formula *create_formula(short, short, short**);
+
+#endif

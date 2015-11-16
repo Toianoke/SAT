@@ -1,3 +1,6 @@
+#ifndef SOLVER_H
+#define SOLVER_H
+
 #include "formula.h"
 
 int is_consistent_literals(Formula*);
@@ -17,3 +20,5 @@ int dpll(Formula*);
 int solve(short, short, short**);
 
 Formula* create_formula(short, short, short**);
+
+#endif
