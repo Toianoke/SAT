@@ -274,14 +274,7 @@ Formula* create_formula(short nv, short nc, short **in_clauses){
 
 
 
-/*
- * called from outside
- */
-int solve(short nv, short nc, short **clauses){
-  assert(clauses != NULL);
 
-  return dpll(create_formula(nv, nc, clauses));
-}
 
 
 int dpll(Formula *F){
@@ -305,4 +298,11 @@ int dpll(Formula *F){
   return dpll(propagate_unit(F, v)) || dpll(propagate_unit(F, ((-1)*v)));
 }
 
+/*
+ * called from outside
+ */
+int solve(short nv, short nc, short **clauses){
+  assert(clauses != NULL);
 
+  return dpll(create_formula(nv, nc, clauses));
+}
