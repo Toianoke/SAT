@@ -116,7 +116,7 @@ int main(int argc, char ** argv)
   	int /*i,*/ cls_cnt, var_cnt, temp, first = 1;
   	int com_done = 0;
   	int init_set = 0;
-  	int num_clss = 0;
+  	//int num_clss = 0;
   	int row = 0;
   	for(i = 0; i <= line_count; i++)
   	{
@@ -238,7 +238,7 @@ int main(int argc, char ** argv)
   			
   			
   			
-  			int num = 0;
+  			//int num = 0;
   			int i;
   			for(i = 0; i < num_tok; i++)
   			{
