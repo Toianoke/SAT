@@ -280,12 +280,12 @@ int main(int argc, char ** argv)
 	// tt uncommented Nov 11 16:06
   	if(solve(var_cnt, cls_cnt, clauses))
   	{
-  		printf("SOLVABLE");
+  		printf("SATISFIABLE\n");
   		return 0;
   	}
   	else
   	{
-  		printf("UNSOLVABLE");
+  		printf("UNSATISFIABLE\n");
   		return 0;
   	
   	}
