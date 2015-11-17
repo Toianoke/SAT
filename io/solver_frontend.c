@@ -11,7 +11,7 @@
 /**
  * Prints "ERROR\n" and exits with 0 condition when bool is true
  */
-void
+static void
 error_on(int bool)
 {
   if (bool) {
@@ -24,7 +24,7 @@ error_on(int bool)
 /**
  * Prints "UNKNOWN\n" and exits with 0 condition when bool is true
  */
-void
+void // TODO: may bee good to allow solver to use this func on bad mallocs
 unknown_on(int bool)
 {
   if (bool) {
@@ -39,9 +39,13 @@ unknown_on(int bool)
  *     and with inclusive min and max values
  * Exits on all non-parsable or invalid inputs
  */
-long
+static long
 parse_long(char* str, char ** endptr, long min, long max)
 {
+  assert(str != NULL);
+  assert(endptr != NULL);
+  assert(min <= max);
+  
   long retval = strtol(str, endptr, 10);
   error_on(*endptr == str);
   error_on(errno == ERANGE);
@@ -56,9 +60,15 @@ parse_long(char* str, char ** endptr, long min, long max)
  *     Disregards comment lines.
  * Exits on improper formatting or file errors
  */
-FILE *
+static FILE *
 read_header(char * filename, short * nbvar, short * nbclauses)
 {
+  assert(filename != NULL);
+  assert(nbvar != NULL);
+  assert(nbclauses != NULL);
+  assert(*nbvar > 0);
+  assert(nbclauses > 0);
+  
   FILE * fp = fopen(filename, "r");
   error_on(fp == NULL);
 
@@ -110,9 +120,13 @@ read_header(char * filename, short * nbvar, short * nbclauses)
  *     Disregards comment lines.
  * Exits on improper formatting or file errors
  */
-short **
+static short **
 read_body(FILE* fp, short nbvar, short nbclauses)
 {
+  assert(fp != NULL);
+  assert(nbvar > 0);
+  assert(nbclauses > 0);
+  
   short ** retval = (short **) malloc(sizeof(short *)*(nbclauses));
   unknown_on(retval == NULL);
 
