@@ -133,9 +133,10 @@ Formula* propagate_unit(Formula *f, short n){
   // suspicious code START
   lits = malloc(sizeof(short*)*f->num_clauses);
   for(i=0; i<f->num_clauses; i++){
-    lits[i] = malloc(sizeof(short)*(f)->clauses[i].num_lits);
+    lits[i] = malloc(sizeof(short)*((f)->clauses[i].num_lits+1));
     for(j=0; j<f->clauses[i].num_lits; j++)
       lits[i][j] = f->clauses[i].literals[j];
+    lits[i][j+1] = 0;
   }
   fn = create_formula(f->vl_length, f->num_clauses, lits);
   // suspicious code END
@@ -263,9 +264,10 @@ Formula* create_formula(short nv, short nc, short **in_clauses){
     cp->literals = malloc(sizeof(short)*count);
     for (j = 0; j < count; j++){
 	  f->clauses[i].literals[j] = in_clauses[i][j];
-	  if(!array_contains(f->var_list, k, in_clauses[i][j])){
-		  f->var_list[k] = in_clauses[i][j];
-		  k++;
+	  if(!array_contains(f->var_list, k, abs(in_clauses[i][j]))){
+
+	    f->var_list[k] = abs(in_clauses[i][j]);
+	    k++;
 	  }
 	}
     cp++;
