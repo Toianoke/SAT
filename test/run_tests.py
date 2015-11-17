@@ -98,31 +98,30 @@ def run_test(source_file, base_directory):
 
   try:
     start = time()
-
-    output = run_step(list(), sat,
-                      [source_file])
-
+    output = run_step(sat, [source_file])
     end = time()
   except SP.CalledProcessError as e:
     if e.returncode == -2:
       return
     end = time()
-    td = tally_output(source_file, 'RUN FAILED', settings, end-start)
+    td = tally_output(source_file, 'RUN FAILED (most likely a segfault)', settings, end-start)
+    return td
+  except:
+    end = time()
+    td = tally_output(source_file, 'UNKNOWN FAILURE', settings, end-start)
     return td
 
   # check output
   return tally_output(source_file, output, settings, end-start)
 
 
-def run_step(test_log, cmd, args):
+def run_step( cmd, args):
   command = cmd+" "+" ".join(args)
   with SP.Popen(command,
-                stdout=SP.PIPE, stderr=SP.STDOUT,shell=True) as proc:
+                stdout=SP.PIPE, stderr=SP.STDOUT, shell=True) as proc:
     output = proc.stdout.read().decode("utf-8")
     proc.wait()
 
-    test_log.extend(output.splitlines())
-    
     if proc.returncode != 0:
       raise SP.CalledProcessError(proc.returncode, command)
     return output
@@ -160,7 +159,8 @@ def main_thread_sum_output(tally_dict):
 
   printout += [" Status: {}".format(green("pass") if pass_fail else red("fail"))]
   printout += ["", ""]
-  if not pass_fail:
+
+  if True: #pass_fail == False:
     LOG.info('\n'.join(printout))
 
 
@@ -236,6 +236,8 @@ def main():
     print("Quitting now")
     pool.terminate()
     pool.join()
+    LOG.info("\nTests passed: {}".format(passed))
+    LOG.info("Tests failed: {}".format(failed))
   else:
     # close thread pool
     LOG.debug("Closing thread pool")
