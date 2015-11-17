@@ -193,7 +193,7 @@ main(int argc, char ** argv)
     printf("\n");
   }
   
-  if (solve(nbvar, nbclauses+1, clauses)) {
+  if (solve(nbvar, nbclauses, clauses)) {
     printf("SATISFIABLE\n");
   } else {
     printf("UNSATISFIABLE\n");
