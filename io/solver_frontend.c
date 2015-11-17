@@ -88,7 +88,7 @@ read_header(char * filename, short * nbvar, short * nbclauses)
 short **
 read_body(FILE* fp, short nbvar, short nbclauses)
 {
-  short ** retval = (short **) malloc(sizeof(short *)*(nbclauses+1));
+  short ** retval = (short **) malloc(sizeof(short *)*(nbclauses));
   error_on(retval == NULL);
 
   short * temp = (short *) malloc(sizeof(short)*(nbvar+1));
@@ -131,9 +131,6 @@ read_body(FILE* fp, short nbvar, short nbclauses)
       endptr1 = endptr2;
       if (temp[i] == 0) {
 	found_zero = 1;
-	for (j=i; j<=nbvar; j++) {
-	  temp[j] = 0;
-	}
 	break;
       }
     }
@@ -146,17 +143,13 @@ read_body(FILE* fp, short nbvar, short nbclauses)
     error_on(!(*endptr2 == '\n' || *endptr2 == '\0'));
 
     // malloc the final placement of the array and copy from temp
-    retval[clause_index] = (short *) malloc(sizeof(short)*(nbvar+1));
+    retval[clause_index] = (short *) malloc(sizeof(short)*(i));
     error_on(retval[clause_index] == NULL);
-    memcpy(retval[clause_index], temp, sizeof(short)*(nbvar+1));
+    memcpy(retval[clause_index], temp, sizeof(short)*(i+1));
 
     // Go to next clause and null terminate when done
     clause_index++;
     if (clause_index == nbclauses) {
-      retval[nbclauses] = (short *) malloc(sizeof(short)*(nbvar+1));
-      error_on(retval[clause_index] == NULL);
-      memset(retval[clause_index], 0 , sizeof(short)*(nbvar+1));
-      
       // there should be no lines with content after the last clause;
       // read until there is no more
       out = endptr2;
@@ -187,14 +180,18 @@ main(int argc, char ** argv)
   short ** clauses = read_body(fp, nbvar, nbclauses);
   fclose(fp);
 
-  /* printf("The final array with %d clauses and at the most %d variables in each clause:", nbclauses, nbvar); */
-  /* short i,j; */
-  /* for (i=0; i<=nbclauses; i++) { */
-  /*   for (j=0; j<=nbvar; j++) { */
-  /*     printf("%d ",clauses[i][j]); */
-  /*   } */
-  /*   printf("\n"); */
-  /* } */
+  printf("The final array with %d clauses and at the most %d "
+	 "variables in each clause:\n", nbclauses, nbvar);
+  short i,j;
+  for (i=0; i<=nbclauses; i++) {
+    for (j=0; j<=nbvar; j++) {
+      printf("%d ",clauses[i][j]);
+      if (clauses[i][j] == 0) {
+	break;
+      }
+    }
+    printf("\n");
+  }
   
   if (solve(nbvar, nbclauses+1, clauses)) {
     printf("SATISFIABLE\n");
