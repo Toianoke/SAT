@@ -1,6 +1,6 @@
-CFLAGS := -Wall -O3 -march=native -flto  
+CFLAGS := -Wall -O3 -march=native
 
-DEBUGFLAGS := -Wall -g -Og -D DEBUG
+DEBUGFLAGS := -Wall -g -D DEBUG
 
 all: solver/solver.h solver/formula.h solver/solver.c io/solver_frontend.c
 	$(CC) $(CFLAGS) -I solver solver/solver.c io/solver_frontend.c -o sat

@@ -184,7 +184,7 @@ read_body(FILE* fp, short nbvar, short nbclauses)
     error_on(!(*endptr2 == '\n' || *endptr2 == '\0'));
 
     // malloc the final placement of the array and copy from temp
-    retval[clause_index] = (short *) malloc(sizeof(short)*(i));
+    retval[clause_index] = (short *) malloc(sizeof(short)*(i+1));
     unknown_on(retval[clause_index] == NULL);
     memcpy(retval[clause_index], temp, sizeof(short)*(i+1));
 
