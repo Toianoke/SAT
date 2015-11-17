@@ -66,8 +66,6 @@ read_header(char * filename, short * nbvar, short * nbclauses)
   assert(filename != NULL);
   assert(nbvar != NULL);
   assert(nbclauses != NULL);
-  assert(*nbvar > 0);
-  assert(nbclauses > 0);
   
   FILE * fp = fopen(filename, "r");
   error_on(fp == NULL);
