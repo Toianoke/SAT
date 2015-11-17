@@ -136,7 +136,7 @@ Formula* propagate_unit(Formula *f, short n){
     lits[i] = malloc(sizeof(short)*((f)->clauses[i].num_lits+1));
     for(j=0; j<f->clauses[i].num_lits; j++)
       lits[i][j] = f->clauses[i].literals[j];
-    lits[i][j+1] = 0;
+    lits[i][j] = 0;
   }
   fn = create_formula(f->vl_length, f->num_clauses, lits);
   // suspicious code END
@@ -158,13 +158,17 @@ int has_single_polarity(short v, Formula *f)
 {
   assert(f != NULL);
 
-	int i;
-	
-	for (i = 0; i < f->vl_length; i++) {
-		if((v + f->var_list[i]) == 0)
-			return 0;
-	}
-	return 1;
+  int i;
+  
+  for (i = 0; i < f->vl_length; i++){
+    /*
+    printf("v: %d\n", v);
+    printf("f->var_list[%d]: %d\n", i, f->var_list[i]);
+    */
+    if((v + f->var_list[i]) == 0)
+      return 0;
+  }
+  return 1;
 }
 
 /*
@@ -201,13 +205,13 @@ void eliminate_pure_literals(Formula *f){
 
   for(i = 0; i < f->vl_length; i++)
   {
-	  v = f->var_list[i];
-	  if(has_single_polarity(v, f)){
-		  for(j = 0; j < f->num_clauses; j++){
-			  if(clause_contains(cp++, v))
-				  remove_clause(c_idx++, f);
-		  }
-	  }
+    v = f->var_list[i];
+    if(has_single_polarity(v, f)){
+      for(j = 0; j < f->num_clauses; j++){
+	if(clause_contains(cp++, v))
+	  remove_clause(c_idx++, f);
+      }
+    }
   }
 }
 
@@ -246,39 +250,36 @@ Formula* create_formula(short nv, short nc, short **in_clauses){
 
   Formula *f = malloc(sizeof(Formula));
   f->num_clauses = nc;
-  f->vl_length = nv;//new
-  f->var_list = malloc(sizeof(short)*nv);//new
+  f->vl_length = 2*nv;//re-work to get exact needed length
+  f->var_list = malloc(sizeof(short)*f->vl_length);//new
 
   f->clauses = malloc(sizeof(Clause)*nc);
   cp = f->clauses;
 
   k = 0;
-  for(i = 0; i < f->num_clauses; i++)
-  {
+  for(i = 0; i < f->num_clauses; i++){
     count = 0;
     while(in_clauses[i][count] != 0)
 	  count++;
-  
+    /*
+    printf("create_formula ...\n");
+    printf("\tcount: %d\n", count);
+    */
     cp->num_lits = count;
 
-    cp->literals = malloc(sizeof(short)*count);
+    cp->literals = malloc(sizeof(short)*count+1);
     for (j = 0; j < count; j++){
 	  f->clauses[i].literals[j] = in_clauses[i][j];
-	  if(!array_contains(f->var_list, k, abs(in_clauses[i][j]))){
-
-	    f->var_list[k] = abs(in_clauses[i][j]);
+	  if(!array_contains(f->var_list, k, /*abs*/(in_clauses[i][j]))){
+	    f->var_list[k] = /*abs*/(in_clauses[i][j]);
 	    k++;
 	  }
 	}
+    f->clauses[i].literals[j] = 0;
     cp++;
   }
   return f;
 }
-
-
-
-
-
 
 int dpll(Formula *F){
   assert(F != NULL);
