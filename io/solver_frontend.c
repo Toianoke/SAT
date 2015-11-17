@@ -235,7 +235,7 @@ main(int argc, char ** argv)
   printf("The final array with %d clauses and at the most %d "
 	 "variables in each clause:\n", nbclauses, nbvar);
   short i,j;
-  for (i=0; i<=nbclauses; i++) {
+  for (i=0; i<nbclauses; i++) {
     for (j=0; j<=nbvar; j++) {
       printf("%d ",clauses[i][j]);
       if (clauses[i][j] == 0) {
