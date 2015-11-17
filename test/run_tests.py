@@ -134,9 +134,19 @@ def tally_output(source_file, output, settings, time):
   tally["time"] = time
 
   tally['expected'] = settings["expected"]
-  tally['actual'] = (settings["expected"] if
-                     RE.search(settings["expected"], output) != None else
-                     output)
+  matches = [RE.search(r"(SATISFIABLE)", output),
+             RE.search(r"(UNSATISFIABLE)", output),
+             RE.search(r"(ERROR)", output)]
+
+  if matches[2]:
+    tally['actual'] = matches[2].group(1).strip()
+  elif matches[1]:
+    tally['actual'] = matches[1].group(1).strip()
+  elif matches[0]:
+    tally['actual'] = matches[0].group(1).strip()
+  else:
+    tally['actual'] = ''
+    
   return tally
 
 passed = 0
