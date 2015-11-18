@@ -105,7 +105,6 @@ void remove_var(short idx, Clause *c){
 
 void remove_clause(short idx, Formula *f){
   assert(f != NULL);
-
   short j;
 
   j = idx + 1;
@@ -209,12 +208,18 @@ void eliminate_pure_literals(Formula *f){
   for(i = 0; i < f->vl_length; i++)
   {
     v = f->var_list[i];
-    if(has_single_polarity(v, f)){
-      for(j = 0; j < f->num_clauses; j++){
-	if(clause_contains(cp++, v))
-	  remove_clause(c_idx++, f);
+	
+    if(has_single_polarity(v, f))
+	{
+      for(j = 0; j < f->num_clauses; j++)
+	  {
+	    if(clause_contains(cp++, v))
+	      remove_clause(c_idx, f);
+
+		c_idx++;
       }
     }
+	
   }
 }
 
@@ -270,6 +275,7 @@ Formula* create_formula(short nv, short nc, short **in_clauses){
     cp->num_lits = count;
 
     cp->literals = malloc(sizeof(short)*(count+1));
+	//printf("cp->literals: %x\n", cp->literals);
     for (j = 0; j < count; j++){
 	  f->clauses[i].literals[j] = in_clauses[i][j];
 	  if(!array_contains(f->var_list, k, /*abs*/(in_clauses[i][j]))){
