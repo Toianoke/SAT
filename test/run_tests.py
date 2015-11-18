@@ -134,38 +134,37 @@ def tally_output(source_file, output, settings, time):
   tally["time"] = time
 
   tally['expected'] = settings["expected"]
-  matches = [RE.search(r"(SATISFIABLE)", output),
-             RE.search(r"(UNSATISFIABLE)", output),
-             RE.search(r"(ERROR)", output)]
-
-  if matches[2]:
-    tally['actual'] = matches[2].group(1).strip()
-  elif matches[1]:
-    tally['actual'] = matches[1].group(1).strip()
-  elif matches[0]:
-    tally['actual'] = matches[0].group(1).strip()
-  else:
-    tally['actual'] = ''
+  tally['actual'] = output
     
   return tally
 
+def cnf_strip(text):
+  if "ERROR" in text:
+    return "ERROR"
+  if "UNSATISFIABLE" in text:
+    return "UNSATISFIABLE"
+  if "SATISFIABLE" in text:
+    return "SATISFIABLE"
+  return text
+  
 passed = 0
 failed = 0
 def main_thread_sum_output(tally_dict):
   global passed, failed
 
-  printout = ["-"*40,
+  printout = ["-"*80,
               tally_dict["source"],
               "Time: {}".format(tally_dict['time'])]
 
-  if tally_dict['expected'] == tally_dict['actual']:
+  if tally_dict['expected'] == cnf_strip(tally_dict['actual']):
     pass_fail = True
     passed += 1
   else:
     pass_fail = False
     failed += 1
-    printout.append("Expected: {}".format(tally_dict['expected']))
-    printout.append("Actual: {}".format(tally_dict['actual']))
+    
+  printout.append("Expected: {}".format(tally_dict['expected']))
+  printout.append("Actual: {}".format(tally_dict['actual']))
 
   printout += [" Status: {}".format(green("pass") if pass_fail else red("fail"))]
   printout += ["", ""]
