@@ -250,8 +250,7 @@ Formula* create_formula(short nv, short nc, short **in_clauses){
 
   Formula *f = malloc(sizeof(Formula));
   f->num_clauses = nc;
-  f->vl_length = 2*nv;//re-work to get exact needed length
-  f->var_list = malloc(sizeof(short)*f->vl_length);//new
+  f->var_list = malloc(sizeof(short)*2*nv);
 
   f->clauses = malloc(sizeof(Clause)*nc);
   cp = f->clauses;
@@ -267,7 +266,7 @@ Formula* create_formula(short nv, short nc, short **in_clauses){
     */
     cp->num_lits = count;
 
-    cp->literals = malloc(sizeof(short)*count+1);
+    cp->literals = malloc(sizeof(short)*(count+1));
     for (j = 0; j < count; j++){
 	  f->clauses[i].literals[j] = in_clauses[i][j];
 	  if(!array_contains(f->var_list, k, /*abs*/(in_clauses[i][j]))){
@@ -278,6 +277,8 @@ Formula* create_formula(short nv, short nc, short **in_clauses){
     f->clauses[i].literals[j] = 0;
     cp++;
   }
+
+  f->vl_length = k;
   return f;
 }
 
