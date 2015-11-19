@@ -7,7 +7,7 @@ def gen_clause(nbvar, terms, var_list):
     assert(nbvar >= 1)
     assert(terms <= nbvar)
     R.shuffle(var_list)
-    return var_list[:terms]
+    return var_list[:terms] + [0]
 
 def gen_clauses(nbvar, nbclauses):
     assert(nbvar >= 1)
