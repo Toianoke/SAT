@@ -88,7 +88,6 @@ def merge_settings(base_settings, new_settings):
 #+------------------------------------------------------------------------------+
 
 def run_test(source_file, base_directory):
-  # change to test directory
   test_directory = PATH.split(source_file)[0]
   # get test settings
   settings = get_settings_from_directory(test_directory, base_directory)
@@ -101,15 +100,19 @@ def run_test(source_file, base_directory):
     output = run_step(sat, [source_file])
     end = time()
   except SP.CalledProcessError as e:
-    if e.returncode == -2:
+    end = time()
+    if e.returncode == -2: # control-c killed it
       return
-    end = time()
-    td = tally_output(source_file, 'RUN FAILED (most likely a segfault)', settings, end-start)
-    return td
-  except:
-    end = time()
-    td = tally_output(source_file, 'UNKNOWN FAILURE', settings, end-start)
-    return td
+    if e.returncode == 124: # timed out
+      return tally_output(source_file, 'TIMED OUT', settings, end-start)
+    if e.returncode == 134: # assertion failure
+      return tally_output(source_file, 'ASSERTION FAILURE', settings, end-start)
+    if e.returncode == 139: # segfault
+      return tally_output(source_file, 'RUN FAILED SEGFAULT', settings, end-start)
+    if e.returncode == 127: # segfault
+      return tally_output(source_file, 'RUN FAILED EXECUTABLE NOT FOUND', settings, end-start)
+    # unknown
+    return tally_output(source_file, 'RUN FAILED: UNKNOWN ({})'.format(e.returncode), settings, end-start)
 
   # check output
   return tally_output(source_file, output, settings, end-start)
@@ -135,7 +138,7 @@ def tally_output(source_file, output, settings, time):
 
   tally['expected'] = settings["expected"]
   tally['actual'] = output
-    
+
   return tally
 
 def cnf_strip(text):
@@ -146,7 +149,7 @@ def cnf_strip(text):
   if "SATISFIABLE" in text:
     return "SATISFIABLE"
   return text
-  
+
 passed = 0
 failed = 0
 def main_thread_sum_output(tally_dict):
@@ -162,7 +165,7 @@ def main_thread_sum_output(tally_dict):
   else:
     pass_fail = False
     failed += 1
-    
+
   printout.append("Expected: {}".format(tally_dict['expected']))
   printout.append("Actual: {}".format(tally_dict['actual']))
 
@@ -178,6 +181,8 @@ def parse_command_args():
 
   parser = AP.ArgumentParser()
 
+  parser.add_argument("-d", "--directory", action="store", dest="test_directory", type=str,
+                      help="sets the test directory (current by default)")
   parser.add_argument("-p", "--processes",
                       help="number of processes to use",
                       type= int)
@@ -200,7 +205,7 @@ def parse_command_args():
     try:
       args.processes = MP.cpu_count()
     except:
-      args.processes = 1  
+      args.processes = 1
   # if the user supplied a log path, write the logs to that file.
   # otherwise, write the logs to std out.
   if args.log_path:
@@ -208,7 +213,14 @@ def parse_command_args():
   else:
     LOG.basicConfig(format=log_format, level=log_level)
 
-  return {"processes" : args.processes}
+  if args.test_directory:
+    args.test_directory = PATH.split(PATH.abspath(args.test_directory))[0]
+  else:
+    args.test_directory = PATH.split(PATH.abspath(__file__))[0]
+
+
+  return {"processes" : args.processes,
+          "test_directory" : args.test_directory}
 
 
 sat = "../sat"
@@ -216,8 +228,8 @@ sat = "../sat"
 def main():
   # parse command line args
   arg_dict = parse_command_args()
-  this_path = PATH.split(PATH.abspath(__file__))[0]
-  
+  this_path = arg_dict["test_directory"]
+
   # setup thread pool
   LOG.debug("Creating Pool with '{}' Workers".format(arg_dict["processes"]))
   pool = MPP.ThreadPool(processes=arg_dict["processes"])
@@ -239,7 +251,7 @@ def main():
     # keep the main thread active while there are active workers
     for r in results:
       r.wait()
-    
+
   except KeyboardInterrupt:
     print("Testing exited by control-c")
     print("Quitting now")
@@ -254,6 +266,7 @@ def main():
     pool.join()
     LOG.info("\nTests passed: {}".format(passed))
     LOG.info("Tests failed: {}".format(failed))
+    LOG.info("Total tests: {}".format(failed+passed))
   # tally final results
 
 
@@ -262,3 +275,4 @@ def main():
 
 if __name__ == "__main__":
   main()
+

@@ -1,64 +1,49 @@
 #!/usr/bin/env python3
 import random as R
+import sys
+import os
 
-
-def gen_clause(nbvar, terms):
+def gen_clause(nbvar, terms, var_list):
     assert(nbvar >= 1)
     assert(terms <= nbvar)
-    clause = list()
-    while len(clause) < terms:
-        c = R.randint(-nbvar, nbvar)
-        if c in clause or -c in  clause or c == 0:
-            continue
-        clause.append(c)
-    clause.append(0)
-    return clause
+    R.shuffle(var_list)
+    return var_list[:terms]
 
 def gen_clauses(nbvar, nbclauses):
     assert(nbvar >= 1)
-    clauses = list()
-
+    var_list = list(range(1, nbvar+1))
     for i in range(nbclauses):
-        clauses.append(gen_clause(nbvar, R.randint(1, nbvar)))
-    return clauses
+        yield gen_clause(nbvar, R.randint(1, nbvar), var_list)
 
-def gen_assignments(nbvars):
-    for i in range(2**nbvars):
-        bin_str = bin(i)[2:]
-        bin_str = bin_str + '0'*(nbvars-len(bin_str))
-        assignment = ["INVALID"] + [bool(bin_str[j]) for j in range(nbvars)]
-        yield assignment
 
-def check_clause(clause, assignment):
-    for term in clause[:-1]:
-        if term > 0:
-            res = assignment[term]
-        else:
-            res = not assignment[-term]
-        if res:
-            return True
-    return False
+def gen_test_strings(nbvar, nbclauses):
+    yield "p cnf {} {}".format(nbvar, nbclauses)
+    for clause in gen_clauses(nbvar, nbclauses):
+        yield ' '.join(map(str, clause))
 
-def gen_test_string(nbvars, nbclauses):
-    strings = list()
-    clauses = gen_clauses(nbvars, nbclauses)
-    strings.append("p cnf {} {}".format(nbvars, nbclauses))
-    clause_strings = [' '.join(map(str, clause)) for clause in clauses]
-    strings.extend(clause_strings)
-    return '\n'.join(strings)
 
-def gen_test(nbvars, nbclauses, filename=None):
-    test = gen_test_string(nbvars, nbclauses)
-    if filename==None:
-        print(test)
-    else:
-        with open(filename, "w") as f:
-            f.write(test)
-        
+def gen_test(nbvar, nbclauses, filename):
+    with open(filename, "w") as f:
+        for line in gen_test_strings(nbvar, nbclauses):
+            f.write(line+"\n")
+
+
 if __name__ == "__main__":
+    try:
+        os.chdir(sys.argv[1])
+        tests = int(sys.argv[2])
+        lowvars = int(sys.argv[3])
+        highvars = int(sys.argv[4])
+        assert(lowvars <= highvars)
+    except:
+        print("use: {} dir tests lowvars highvars".format(argv[0]))
+
     R.seed(42)
-    for i in range(10000):
-        v = R.randint(10,20)
-        gen_test(v,
-                 min(int(5.4*v), 65535),
-                 "test_{:05}.cnf".format(i))
+    for i in range(tests):
+        print(".",end='')
+        if i%80 == 79:
+            print("")
+        v = R.randint(lowvars, highvars)
+        gen_test(v, min(int(5.4*v), 65535), "test_{:05}".format(i))
+    print("")
+
