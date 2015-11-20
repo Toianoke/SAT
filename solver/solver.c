@@ -202,7 +202,7 @@ void eliminate_pure_literals(Formula *f){
 	 *Tony already suggested).
 	 */
   int i, j;
-  short v, c_idx = 0;
+  short v= 0;
   Clause *cp = f->clauses;
 
   for(i = 0; i < f->vl_length; i++)
@@ -211,13 +211,14 @@ void eliminate_pure_literals(Formula *f){
 	
     if(has_single_polarity(v, f))
 	{
-      for(j = 0; j < f->num_clauses; j++)
-	  {
-	    if(clause_contains(cp++, v))
-	      remove_clause(c_idx, f);
-
-		c_idx++;
-      }
+		for(j = 0; j < f->num_clauses; j++)
+		{
+			if(clause_contains(&f->clauses[j], v))
+			{
+				remove_clause(j, f);
+				j--;
+			}
+		}
     }
 	
   }
@@ -278,7 +279,8 @@ Formula* create_formula(short nv, short nc, short **in_clauses){
 	//printf("cp->literals: %x\n", cp->literals);
     for (j = 0; j < count; j++){
 	  f->clauses[i].literals[j] = in_clauses[i][j];
-	  if(!array_contains(f->var_list, k, /*abs*/(in_clauses[i][j]))){
+	  if(!array_contains(f->var_list, k, /*abs*/(in_clauses[i][j])))
+	  {
 	    f->var_list[k] = /*abs*/(in_clauses[i][j]);
 	    k++;
 	  }
