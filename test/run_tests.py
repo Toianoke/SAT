@@ -89,11 +89,10 @@ def merge_settings(base_settings, new_settings):
 
 def run_test(source_file, base_directory):
   test_directory = PATH.split(source_file)[0]
+  
   # get test settings
   settings = get_settings_from_directory(test_directory, base_directory)
   get_settings_from_source(source_file, settings)
-
-  # setup test logging (different from python logging module)
 
   try:
     start = time()
@@ -109,7 +108,7 @@ def run_test(source_file, base_directory):
       return tally_output(source_file, 'ASSERTION FAILURE', settings, end-start)
     if e.returncode == 139: # segfault
       return tally_output(source_file, 'RUN FAILED SEGFAULT', settings, end-start)
-    if e.returncode == 127: # segfault
+    if e.returncode == 127: # no executable
       return tally_output(source_file, 'RUN FAILED EXECUTABLE NOT FOUND', settings, end-start)
     # unknown
     return tally_output(source_file, 'RUN FAILED: UNKNOWN ({})'.format(e.returncode), settings, end-start)
@@ -132,14 +131,13 @@ def run_step( cmd, args):
 
 def tally_output(source_file, output, settings, time):
   tally = dict()
-
   tally["source"] = source_file
   tally["time"] = time
-
   tally['expected'] = settings["expected"]
   tally['actual'] = output
 
   return tally
+
 
 def cnf_strip(text):
   if "ERROR" in text:
@@ -170,6 +168,7 @@ def main_thread_sum_output(tally_dict):
   printout.append("Actual: {}".format(tally_dict['actual']))
 
   printout += [" Status: {}".format(green("pass") if pass_fail else red("fail"))]
+  printout += [" Completed: {} / {}".format(passed+failed, total_tests)]
   printout += ["", ""]
 
   if True: #pass_fail == False:
@@ -214,7 +213,7 @@ def parse_command_args():
     LOG.basicConfig(format=log_format, level=log_level)
 
   if args.test_directory:
-    args.test_directory = PATH.split(PATH.abspath(args.test_directory))[0]
+    args.test_directory = PATH.abspath(args.test_directory)
   else:
     args.test_directory = PATH.split(PATH.abspath(__file__))[0]
 
@@ -223,9 +222,10 @@ def parse_command_args():
           "test_directory" : args.test_directory}
 
 
-sat = "../sat"
-
+sat = "ulimit -Sv 6000000; timeout 300 ../sat"
+total_tests = 0
 def main():
+  global total_tests
   # parse command line args
   arg_dict = parse_command_args()
   this_path = arg_dict["test_directory"]
@@ -236,17 +236,20 @@ def main():
 
   # run thread pool
   #  catch control-c
+  start = time()
   try:
     LOG.info("Running tests")
 
     # start processing the tests.
     results = []
-    for test in sorted(GLOB.glob("./**/*.cnf")):
+    tests = sorted(GLOB.glob(PATH.join(this_path,"/**/*.cnf")) +
+                       GLOB.glob(PATH.join(this_path,"*.cnf")))
+    total_tests = len(tests)
+    for test in tests:
       r = pool.apply_async(run_test,
                            args=(PATH.abspath(test), this_path),
                            callback=main_thread_sum_output)
       results.append(r)
-#      run_test(PATH.abspath(test), this_path)
 
     # keep the main thread active while there are active workers
     for r in results:
@@ -256,22 +259,16 @@ def main():
     print("Testing exited by control-c")
     print("Quitting now")
     pool.terminate()
-    pool.join()
-    LOG.info("\nTests passed: {}".format(passed))
-    LOG.info("Tests failed: {}".format(failed))
-  else:
-    # close thread pool
-    LOG.debug("Closing thread pool")
+  finally:
+    end = time()
     pool.close()
     pool.join()
-    LOG.info("\nTests passed: {}".format(passed))
+    LOG.info("".format(passed))
+    LOG.info("Tests passed: {}".format(passed))
     LOG.info("Tests failed: {}".format(failed))
-    LOG.info("Total tests: {}".format(failed+passed))
-  # tally final results
+    LOG.info("Total tests completed: {} / {}".format(failed+passed, total_tests))
+    LOG.info("Total time: {}".format(end-start))
 
-
-  # exit
-  pass
 
 if __name__ == "__main__":
   main()
