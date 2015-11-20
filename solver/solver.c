@@ -142,6 +142,10 @@ Formula* propagate_unit(Formula *f, short n){
   }
   fn = create_formula(f->vl_length, f->num_clauses, lits);
   // suspicious code END
+  for(i=0; i<f->num_clauses; i++)
+	  free(lits[i]);
+
+  free(lits);
 
   for(i=0; i<fn->num_clauses; i++){
     c = &fn->clauses[i];
@@ -159,14 +163,8 @@ Formula* propagate_unit(Formula *f, short n){
 int has_single_polarity(short v, Formula *f)
 {
   assert(f != NULL);
-
   int i;
-  
   for (i = 0; i < f->vl_length; i++){
-    /*
-    printf("v: %d\n", v);
-    printf("f->var_list[%d]: %d\n", i, f->var_list[i]);
-    */
     if((v + f->var_list[i]) == 0)
       return 0;
   }
@@ -195,12 +193,6 @@ int clause_contains(Clause *c, short v)
  */
 void eliminate_pure_literals(Formula *f){
   assert(f != NULL);
-	/*This is how I'd like to propose writing eliminate_pure_literals.
-	 *It requires adding two new fields to Formula struct - var_list
-	 *and vl_length. variable_list will be made in create_formula.
-	 *It will contain all the variables without any duplications (kind of like
-	 *Tony already suggested).
-	 */
   int i, j;
   short v= 0;
   Clause *cp = f->clauses;
@@ -211,14 +203,14 @@ void eliminate_pure_literals(Formula *f){
 	
     if(has_single_polarity(v, f))
 	{
-		for(j = 0; j < f->num_clauses; j++)
+	  for(j = 0; j < f->num_clauses; j++)
+	  {
+	    if(clause_contains(&f->clauses[j], v))
 		{
-			if(clause_contains(&f->clauses[j], v))
-			{
-				remove_clause(j, f);
-				j--;
-			}
+		  remove_clause(j, f);
+		  j--;
 		}
+	  }
     }
 	
   }
@@ -319,6 +311,5 @@ int dpll(Formula *F){
  */
 int solve(short nv, short nc, short **clauses){
   assert(clauses != NULL);
-
   return dpll(create_formula(nv, nc, clauses));
 }
