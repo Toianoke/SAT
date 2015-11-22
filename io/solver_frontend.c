@@ -61,7 +61,7 @@ parse_long(char* str, char ** endptr, long min, long max)
  * Exits on improper formatting or file errors
  */
 static FILE *
-read_header(char * filename, short * nbvar, short * nbclauses)
+read_header(char * filename, int * nbvar, int * nbclauses)
 {
   assert(filename != NULL);
   assert(nbvar != NULL);
@@ -118,17 +118,17 @@ read_header(char * filename, short * nbvar, short * nbclauses)
  *     Disregards comment lines.
  * Exits on improper formatting or file errors
  */
-static short **
-read_body(FILE* fp, short nbvar, short nbclauses)
+static int **
+read_body(FILE* fp, int nbvar, int nbclauses)
 {
   assert(fp != NULL);
   assert(nbvar > 0);
   assert(nbclauses > 0);
   
-  short ** retval = (short **) malloc(sizeof(short *)*(nbclauses));
+  int ** retval = (int **) malloc(sizeof(int *)*(nbclauses));
   unknown_on(retval == NULL);
 
-  short * temp = (short *) malloc(sizeof(short)*(nbvar+1));
+  int * temp = (int *) malloc(sizeof(int)*(nbvar+1));
   unknown_on(temp == NULL);
 
   char * buff = (char *) malloc(sizeof(char)*(BUFFSIZE+1));
@@ -184,9 +184,9 @@ read_body(FILE* fp, short nbvar, short nbclauses)
     error_on(!(*endptr2 == '\n' || *endptr2 == '\0'));
 
     // malloc the final placement of the array and copy from temp
-    retval[clause_index] = (short *) malloc(sizeof(short)*(i+1));
+    retval[clause_index] = (int *) malloc(sizeof(int)*(i+1));
     unknown_on(retval[clause_index] == NULL);
-    memcpy(retval[clause_index], temp, sizeof(short)*(i+1));
+    memcpy(retval[clause_index], temp, sizeof(int)*(i+1));
 
     // Go to next clause and terminate when done
     clause_index++;
@@ -225,16 +225,16 @@ main(int argc, char ** argv)
 {
   error_on(argc != 2);
 
-  short nbvar, nbclauses;
+  int nbvar, nbclauses;
   FILE * fp = read_header(argv[1], &nbvar, &nbclauses);
 
-  short ** clauses = read_body(fp, nbvar, nbclauses);
+  int ** clauses = read_body(fp, nbvar, nbclauses);
   fclose(fp);
 
 #ifdef DEBUG
   printf("The final array with %d clauses and at the most %d "
 	 "variables in each clause:\n", nbclauses, nbvar);
-  short i,j;
+  int i,j;
   for (i=0; i<nbclauses; i++) {
     for (j=0; j<=nbvar; j++) {
       printf("%d ",clauses[i][j]);
@@ -252,5 +252,11 @@ main(int argc, char ** argv)
     printf("UNSATISFIABLE\n");
   }
 
+  int k;
+  for (k=0; k<nbclauses; k++) {
+    free(clauses[k]);
+  }
+  free(clauses);
+  
   return 0;
 }

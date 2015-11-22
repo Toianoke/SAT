@@ -17,8 +17,8 @@ int pick_var_from_formula(Formula*);
 
 int dpll(Formula*);
 
-int solve(short, short, short**);
+int solve(int, int, int**);
 
-Formula* create_formula(short, short, short**);
+Formula* create_formula(int, int, int**);
 
 #endif

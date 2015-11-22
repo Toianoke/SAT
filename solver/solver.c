@@ -2,314 +2,499 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
-/*
- *Helper function that returns a literal
- *which is identical to lit but with an inverted sign.
- */
-/*
-Literal negated(Literal lit)
+
+void free_formula(Formula * f);
+int is_unit_clause(Clause * c);
+int array_contains(int *arr, int length, int item);
+  
+// TODO: make and use util version
+void error_on(int bool)
 {
-	Literal new_lit;
-	new_lit.ID = lit.ID;
-    new_lit.sign = !lit.sign;
-	return new_lit;
+  if (bool) {
+    printf("ERROR\n");
+    exit(0);
+  }
 }
-*/
 
-/*
- *Helper function that determines if two literals are equal,
- * Two literals are equal if they have the same ID and the same
- * sign.
+
+/**
+ * TODO: comment is_consistent_literals
  */
-/*
-int equals(Literal lit1, Literal lit2)
+int is_consistent_literals(Formula * f)
 {
-	return ((lit1.ID == lit2.ID) && (lit1.sign == lit2.sign));
-}
-*/
-
-/*
- * returns 1 if f is composed only of
- * literals that are consistent
- * i.e. all clauses contain 1 variable and
- *      no two clauses contain a variable and its negation
- */
-int is_consistent_literals(Formula *f){
   assert(f != NULL);
-  int i,j;
-  Clause *cp = f->clauses;
-  //Check the length of all clauses
-  for(i = 0; i < f->num_clauses; i++)
-  {
-    if(cp++->num_lits != 1)
-	  return 0;
+
+  // Check the length of all clauses
+  int i;
+  for (i = 0; i < f->num_clauses; i++) {
+    if (!is_unit_clause(&f->clauses[i])) {
+      return 0;
+    }
   }
 
-  cp = f->clauses;
-  //check to see if the negation of any variable is present in f
-  //If the code makes it to this point all clauses contain only one variable.
-  for(i = 0; i < f->num_clauses-1; i++)
-  {
-	  for (j = i; j < f->num_clauses; j++) {
-		  Clause* next = cp+1;
-		  if(cp->literals[0] + next->literals[0] == 0)
-		    return 0;
-		  /*
-		  if(equals(cp->literals[0], negated(next->literals[0]) ))
-			 return 0;
-		  */
-	  }
-	  cp++;
+  // check to see if the negation of any variable is present in f
+  // If the code makes it to this point all clauses contain only one variable.
+  int j;
+  for (i = 0; i < f->num_clauses-1; i++) {
+    for (j = i+1; j < f->num_clauses; j++) {
+      if (f->clauses[i].literals[0] + f->clauses[j].literals[0] == 0) {
+	return 0;
+      }
+    }
   }
+
   return 1;
 }
 
-/*
+
+/**
  * returns 1 if there is at least one clause in f
  *              that is empty
  *         0 otherwise
  */
-int contains_empty_clause(Formula *f){
+int contains_empty_clause(Formula * f)
+{
   assert(f != NULL);
 
   int i;
-  Clause *cp = f->clauses;
-
-  for(i = 0; i < f->num_clauses; i++)
-  {
-	if(cp++->num_lits == 0)
-		return 1;	
+  for (i = 0; i < f->num_clauses; i++) {
+    if (f->clauses[i].num_lits == 0) {
+      return 1;
+    }
   }
+
   return 0;
 }
 
-/*
+
+/**
  * returns 1 if c contains exactly 1 variable
  *         0 otherwise
  */
-int is_unit_clause(Clause c){
-  return c.num_lits == 1;
+int is_unit_clause(Clause * c)
+{
+  return c->num_lits == 1;
 }
 
-void remove_var(short idx, Clause *c){
-  assert(c != NULL);
 
-  short j;
-
-  j = idx + 1;
-  while(j<c->num_lits)
-    c->literals[idx++] = c->literals[j++];
-  c->num_lits--;
-}
-
-void remove_clause(short idx, Formula *f){
+/**
+ * TODO: comment remove_var
+ */
+void remove_var(Formula * f, int ci, int idx)
+{
   assert(f != NULL);
-  short j;
+  assert(ci >= 0);
+  assert(ci < f->num_clauses);
+  assert(idx >= 0);
+  assert(idx < f->clauses[ci].num_lits);
+  
+  f->clauses[ci].literals[idx] = f->clauses[ci].literals[f->clauses[ci].num_lits-1];
+  f->clauses[ci].literals[f->clauses[ci].num_lits-1] = 0;
+  f->clauses[ci].num_lits--;
+  f->lits_rebuild_needed = 1;
+}
 
-  j = idx + 1;
-  // IB seems to be removing literals instead of a clause
+
+/**
+ * TODO: comment remove_clause
+ */
+void remove_clause(int idx, Formula * f)
+{
+  assert(f != NULL);
+  assert(idx >= 0);
+  assert(idx < f->num_clauses);
+
+  Clause temp = f->clauses[idx];
   f->clauses[idx] = f->clauses[f->num_clauses-1];
-  /*
-  while(j<f->num_clauses)
-    f->clauses->literals[idx++] = f->clauses->literals[j++];
-  */
+  f->clauses[f->num_clauses-1] = temp;
   f->num_clauses--;
 }
 
-/*
+
+/**
+ * TODO: comment propagate_unit_clause
+ */
+int propagate_unit_clause(Formula * fn, int ci, int n)
+{
+  assert(fn != NULL);
+  assert(ci >= 0);
+  assert(n != 0);
+
+  int i;
+  for (i = 0; i < fn->clauses[ci].num_lits; i++) {
+    if (fn->clauses[ci].literals[i] == n) {
+      remove_clause(ci, fn);
+      return 1;
+    }
+    else if (fn->clauses[ci].literals[i] + n == 0) {
+      remove_var(fn, ci, i);
+      return 0;
+    }
+  }
+  
+  return 0;
+}
+
+
+/**
  * for each clause c in f:
  *   if n appears in c:
  *     remove c from f
  *   if -n appears in c:
  *     remove -n from c
  */
-Formula* propagate_unit(Formula *f, short n){
+Formula * propagate_unit(Formula * f, int n)
+{
   assert(f != NULL);
+  assert(n != 0);
 
-  short i, j;
-  Clause *c;
-  Formula *fn;
-  short **lits;
+  Formula * fn = copy_formula(f);
 
-  // suspicious code START
-  lits = malloc(sizeof(short*)*f->num_clauses);
-  for(i=0; i<f->num_clauses; i++){
-    lits[i] = malloc(sizeof(short)*((f)->clauses[i].num_lits+1));
-    for(j=0; j<f->clauses[i].num_lits; j++)
-      lits[i][j] = f->clauses[i].literals[j];
-    lits[i][j] = 0;
-  }
-  fn = create_formula(f->vl_length, f->num_clauses, lits);
-  // suspicious code END
-  for(i=0; i<f->num_clauses; i++)
-	  free(lits[i]);
-
-  free(lits);
-
-  for(i=0; i<fn->num_clauses; i++){
-    c = &fn->clauses[i];
-    for(j=0; j<c->num_lits; j++){
-      if(c->literals[j] == n)
-	remove_clause(i, fn);
-      else if(c->literals[j] == (-1*n))
-	remove_var(j, c);
+  int i;
+  for (i = 0; i < fn->num_clauses; i++) {
+    if (propagate_unit_clause(fn, i, n)) {
+      i--;
     }
   }
 
   return fn;
 }
 
-int has_single_polarity(short v, Formula *f)
+
+/**
+ * TODO: comment rebuild_lits
+ */
+void rebuild_lits(Formula * f)
 {
   assert(f != NULL);
+
+  int k = 0;
   int i;
-  for (i = 0; i < f->vl_length; i++){
-    if((v + f->var_list[i]) == 0)
-      return 0;
+  for (i = 0; i < f->num_clauses; i++) {
+    int j;
+    for (j = 0; j < f->clauses[i].num_lits; j++) {
+      if (!array_contains(f->var_list, k, f->clauses[i].literals[j])) {
+	f->var_list[k] = f->clauses[i].literals[j];
+	k++;
+      }
+    }
   }
+  f->vl_length = k;
+  f->lits_rebuild_needed = 0;
+}
+
+/**
+ * TODO: comment has_single_polarity
+ */
+int has_single_polarity(int v, Formula * f)
+{
+  assert(f != NULL);
+  assert(v != 0);
+
+  if (f->lits_rebuild_needed) {
+    rebuild_lits(f);
+  }
+  
+  int i;
+  for (i = 0; i < f->vl_length; i++) {
+    if ((v + f->var_list[i]) == 0) {
+      return 0;
+    }
+  }
+  
   return 1;
 }
 
-/*
- *Returns true if clause c contains variable v,
- *false, otherwise.
+
+/**
+ * Returns true if clause c contains variable v,
+ * false, otherwise.
  */
-int clause_contains(Clause *c, short v)
+int clause_contains(Clause * c, int v)
 {
   assert(c != NULL);
-
-	int i;
-	for (i = 0; i < c->num_lits; i++) {
-		if(c->literals[i] == v)
-			return 1;
-	}
-	return 0;
+  assert(v != 0);
+  
+  int i;
+  for (i = 0; i < c->num_lits; i++) {
+    if (c->literals[i] == v) {
+      return 1;
+    }
+  }
+  
+  return 0;
 }
 
-/*
+
+/**
+ * TODO: comment remove_clauses_containing
+ */
+void remove_clauses_containing(Formula * f, int v)
+{
+  assert(f != NULL);
+  assert(v != 0);
+
+  int i;
+  for (i = 0; i < f->num_clauses; i++) {
+    if (clause_contains(&f->clauses[i], v)) {
+      remove_clause(i, f);
+      i--;
+    }
+  }
+}
+
+
+/**
  * for any variable v in F with a single polarity
  *   remove every clause in which v occurs
  */
-void eliminate_pure_literals(Formula *f){
+void eliminate_pure_literals(Formula * f)
+{
   assert(f != NULL);
-  int i, j;
-  short v= 0;
-  Clause *cp = f->clauses;
 
-  for(i = 0; i < f->vl_length; i++)
-  {
+  if (f->lits_rebuild_needed) {
+    rebuild_lits(f);
+  }
+  
+  int v;
+  int i;
+  for (i = 0; i < f->vl_length; i++) {
     v = f->var_list[i];
-	
-    if(has_single_polarity(v, f))
-	{
-	  for(j = 0; j < f->num_clauses; j++)
-	  {
-	    if(clause_contains(&f->clauses[j], v))
-		{
-		  remove_clause(j, f);
-		  j--;
-		}
-	  }
+    assert(v != 0);
+    
+    if (has_single_polarity(v, f)) {
+      remove_clauses_containing(f, v);
     }
-	
   }
 }
 
-/*
+
+/**
  * return a variable that occurs in f
  */
-short pick_var_from_formula(Formula *f){
+int pick_var_from_formula(Formula *f)
+{
   assert(f != NULL);
 
-  return f->clauses->literals[0];
+  return f->clauses[0].literals[0];
 }
 
-int array_contains(short *arr, short length, short item)
+
+/**
+ * TODO: comment array_contains
+ */
+int array_contains(int *arr, int length, int item)
 {
   assert(arr != NULL);
-
-	int i;
-	for (i = 0; i < length; i++) {
-		if(arr[i] == item)
-			return 1;
-	}
-	return 0;
+  assert(length >= 0);
+  
+  int i;
+  for (i = 0; i < length; i++) {
+    if (arr[i] == item) {
+      return 1;
+    }
+  }
+  
+  return 0;
 }
 
-/*
+
+/**
  * returns a new Formula with nv variables
  * and nc clauses, where clauses is an array
- * of arrays of shorts, representing each clause
+ * of arrays of ints, representing each clause
  * in the formula
  */
-Formula* create_formula(short nv, short nc, short **in_clauses){
+Formula * create_formula(int nv, int nc, int **in_clauses)
+{
   assert(in_clauses != NULL);
-
-  int i, j, k, count;
+  assert(nv > 0);
+  assert(nc > 0);
+  
+  int i, j, count;
   Clause *cp;
 
   Formula *f = malloc(sizeof(Formula));
+  error_on(f == NULL);
+  
   f->num_clauses = nc;
-  f->var_list = malloc(sizeof(short)*2*nv);
-
+  f->original_clauses = nc;
+  f->original_vars = nv;
+  f->var_list = malloc(sizeof(int)*2*nv);
+  error_on(f->var_list == NULL);
+    
   f->clauses = malloc(sizeof(Clause)*nc);
+  error_on(f->clauses == NULL);
+  
   cp = f->clauses;
 
-  k = 0;
-  for(i = 0; i < f->num_clauses; i++){
+  for (i = 0; i < f->num_clauses; i++) {
     count = 0;
-    while(in_clauses[i][count] != 0)
-	  count++;
-    /*
-    printf("create_formula ...\n");
-    printf("\tcount: %d\n", count);
-    */
+    while(in_clauses[i][count] != 0) {
+      count++;
+    }
+    
     cp->num_lits = count;
-
-    cp->literals = malloc(sizeof(short)*(count+1));
-	//printf("cp->literals: %x\n", cp->literals);
-    for (j = 0; j < count; j++){
-	  f->clauses[i].literals[j] = in_clauses[i][j];
-	  if(!array_contains(f->var_list, k, /*abs*/(in_clauses[i][j])))
-	  {
-	    f->var_list[k] = /*abs*/(in_clauses[i][j]);
-	    k++;
-	  }
-	}
+    cp->literals = malloc(sizeof(int)*(count+1));
+    error_on(cp->literals == NULL);
+    
+    for (j = 0; j < count; j++) {
+      f->clauses[i].literals[j] = in_clauses[i][j];
+    }
     f->clauses[i].literals[j] = 0;
     cp++;
   }
-
-  f->vl_length = k;
+  f->lits_rebuild_needed = 1;
+  f->vl_length = -1;
+  
   return f;
 }
 
-int dpll(Formula *F){
-  assert(F != NULL);
 
-  short i;
-
-  if(is_consistent_literals(F))
-    return 1;
-  if(contains_empty_clause(F))
-    return 0;
+/**
+ * TODO: comment copy_formula
+ */
+Formula* copy_formula(Formula *f)
+{
+  assert(f != NULL);
   
-  for(i=0; i<F->num_clauses; i++)
-    if(is_unit_clause(F->clauses[i]))
-      propagate_unit(F, F->clauses->literals[0]);
+  Formula * new_f = malloc(sizeof(Formula));
+  error_on(new_f == NULL);
 
-  eliminate_pure_literals(F);
+  new_f->num_clauses = f->num_clauses;
+  new_f->original_clauses = f->num_clauses;
+  new_f->original_vars = f->original_vars;
+  if (f->vl_length == -1) {
+    new_f->vl_length = f->original_vars*2;
+  } else {
+    new_f->vl_length = f->vl_length;
+  }
   
-  /* pick one variable v */
-  short v = pick_var_from_formula(F);
-  return dpll(propagate_unit(F, v)) || dpll(propagate_unit(F, ((-1)*v)));
+  new_f->lits_rebuild_needed = f->lits_rebuild_needed;
+  
+  new_f->var_list = malloc(sizeof(int)*new_f->vl_length);
+  error_on(new_f->var_list == NULL);
+
+  if (f->lits_rebuild_needed == 0) {
+    memcpy(new_f->var_list, f->var_list, sizeof(int)*f->vl_length);
+  }
+  
+  new_f->clauses = malloc(sizeof(Clause)*f->num_clauses);
+  error_on(new_f->clauses == NULL);
+
+  int i;
+  for (i = 0; i < new_f->num_clauses; i++) {
+    Clause * cp = &f->clauses[i];
+    Clause * new_cp = &new_f->clauses[i];
+    new_cp->num_lits = cp->num_lits;
+
+    new_cp->literals = malloc(sizeof(int)*(cp->num_lits+1));
+    error_on(new_cp->literals == NULL);
+    
+    memcpy(new_cp->literals, cp->literals, sizeof(int)*(cp->num_lits+1));
+  }
+  
+  return new_f;
 }
 
-/*
- * called from outside
+
+/**
+ * TODO: comment free_formula
  */
-int solve(short nv, short nc, short **clauses){
+void free_formula(Formula *f)
+{
+  assert(f != NULL);
+  
+  int i;
+  for (i=0; i<f->original_clauses; i++) {
+    free(f->clauses[i].literals);
+    f->clauses[i].literals = NULL;
+  }
+  free(f->clauses);
+  f->clauses = NULL;
+  
+  free(f->var_list);
+  f->var_list = NULL;
+
+  free(f);
+  f = NULL;
+}
+
+
+/**
+ * TODO: comment dpll
+ */
+int dpll(Formula *F)
+{
+  assert(F != NULL);
+
+  Formula * original = F;
+  
+  if (is_consistent_literals(F)) {
+    return 1;
+  }
+  
+  if (contains_empty_clause(F)) {
+    return 0;
+  }
+
+  int i;
+  for (i=0; i<F->num_clauses; i++) {
+    if (is_unit_clause(&F->clauses[i])) {
+      Formula * temp = F;
+      F = propagate_unit(temp, temp->clauses[i].literals[0]);
+      if (temp != original) {
+	free_formula(temp);
+      }
+    }
+  }
+
+  eliminate_pure_literals(F);
+
+
+  /* pick one variable v */
+  int v = pick_var_from_formula(F);
+
+  if (v == 0) {
+    if (F != original) {
+      free_formula(F);
+    }
+    return 0;
+  }
+
+  Formula * temp = F;
+  F = propagate_unit(temp, v);
+  int retval = dpll(F);
+  free_formula(F);
+
+  if (!retval) {
+    F = propagate_unit(temp, ((-1)*v));
+    retval = dpll(F);
+    free_formula(F);
+  }
+
+  if (temp != original) {
+    free_formula(temp);
+  }
+  return retval;
+  //return dpll(propagate_unit(F, v)) || dpll(propagate_unit(F, ((-1)*v)));
+}
+
+
+/**
+ * TODO: comment solve
+ */
+int solve(int nv, int nc, int **clauses)
+{
   assert(clauses != NULL);
-  return dpll(create_formula(nv, nc, clauses));
+  assert(nv > 0);
+  assert(nc > 0);
+
+  Formula *f = create_formula(nv, nc, clauses);
+  int retval = dpll(f);
+  free_formula(f);
+  
+  return retval;
 }
