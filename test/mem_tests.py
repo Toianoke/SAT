@@ -242,7 +242,7 @@ def main():
 
     # start processing the tests.
     results = []
-    tests = sorted(GLOB.glob(PATH.join(this_path,"/**/*.cnf")) +
+    tests = sorted(GLOB.glob(PATH.join(this_path,"**/*.cnf")) +
                        GLOB.glob(PATH.join(this_path,"*.cnf")))
     total_tests = len(tests)
     for test in tests:

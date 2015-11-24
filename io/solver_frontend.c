@@ -33,6 +33,18 @@ unknown_on(int bool)
   }
 }
 
+void
+skip_comments(FILE * fp, char * out, char * buff)
+{
+  while (out[0] == 'c') {
+    do {
+      out = fgets(buff, BUFFSIZE, fp);
+      error_on(ferror(fp) != 0);
+      error_on(out == NULL);
+    } while (strlen(out) == BUFFSIZE-1);
+  }
+}
+
 
 /**
  * Similar interface as strtol without base,
@@ -79,14 +91,7 @@ read_header(char * filename, int * nbvar, int * nbclauses)
     error_on(out == NULL);
 
     // Skip lines with comments
-    if (out[0] == 'c') {
-      while (strlen(out) == BUFFSIZE-1) {
-	out = fgets(buff, BUFFSIZE, fp);
-	error_on(ferror(fp) != 0);
-	error_on(out == NULL);
-      }
-      continue;
-    }
+    skip_comments(fp, out, buff);
 
     // TODO: skip blank lines
 
@@ -143,13 +148,7 @@ read_body(FILE* fp, int nbvar, int nbclauses)
     error_on(out == NULL);
 
     // Skip lines with comments
-    if (out[0] == 'c') {
-      while (strlen(out) == BUFFSIZE-1) {
-	out = fgets(buff, BUFFSIZE, fp);
-	error_on(ferror(fp) != 0);
-      }
-      continue;
-    }
+    skip_comments(fp, out, buff);
 
     // TODO: skip empty lines
 
@@ -195,7 +194,8 @@ read_body(FILE* fp, int nbvar, int nbclauses)
       // read until there is no more
       out = endptr2;
       while (!feof(fp)) {
-	// TODO skip comments
+	// skip comments
+	skip_comments(fp, out, buff);
 	while (*out == ' ') {
 	  out ++;
 	}

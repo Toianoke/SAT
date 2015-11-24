@@ -34,6 +34,8 @@ def red(text):
 def green(text):
   return color_text("\x1b[32m", text)
 
+def yellow(text):
+  return color_text("\x1b[33m", text)
 
 
 #+------------------------------------------------------------------------------+
@@ -158,16 +160,19 @@ def main_thread_sum_output(tally_dict):
               "Time: {}".format(tally_dict['time'])]
 
   if tally_dict['expected'] == cnf_strip(tally_dict['actual']):
-    pass_fail = True
+    pass_fail = 1
     passed += 1
   else:
-    pass_fail = False
+    pass_fail = 0
     failed += 1
 
+  if "TIMED OUT" in tally_dict['actual']:
+    pass_fail = 2
+  
   printout.append("Expected: {}".format(tally_dict['expected']))
   printout.append("Actual: {}".format(tally_dict['actual']))
 
-  printout += [" Status: {}".format(green("pass") if pass_fail else red("fail"))]
+  printout += [" Status: {}".format([red("fail"), green("pass"), yellow("timeout")][pass_fail])]
   printout += [" Completed: {} / {}".format(passed+failed, total_tests)]
   printout += ["", ""]
 
