@@ -252,11 +252,11 @@ main(int argc, char ** argv)
   }
 #endif
 
-  /*  if (solve(nbvar, nbclauses, clauses)) { */
-  /*   printf("SATISFIABLE\n"); */
-  /* } else { */
-  /*   printf("UNSATISFIABLE\n"); */
-  /* } */
+   if (solve(nbvar, nbclauses, clauses)) {
+    printf("SATISFIABLE\n");
+  } else {
+    printf("UNSATISFIABLE\n");
+  }
 
   int k;
   for (k=0; k<nbclauses; k++) {
