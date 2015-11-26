@@ -40,6 +40,9 @@ skip_comments(FILE * fp, char * out, char * buff)
     do {
       out = fgets(buff, BUFFSIZE, fp);
       error_on(ferror(fp) != 0);
+      if (feof(fp)) {
+	return;
+      }
       error_on(out == NULL);
     } while (strlen(out) == BUFFSIZE-1);
   }
@@ -196,6 +199,9 @@ read_body(FILE* fp, int nbvar, int nbclauses)
       while (!feof(fp)) {
 	// skip comments
 	skip_comments(fp, out, buff);
+	if (feof(fp)) {
+	  break;
+	}
 	while (*out == ' ') {
 	  out ++;
 	}
@@ -246,11 +252,11 @@ main(int argc, char ** argv)
   }
 #endif
 
-  if (solve(nbvar, nbclauses, clauses)) {
-    printf("SATISFIABLE\n");
-  } else {
-    printf("UNSATISFIABLE\n");
-  }
+  /*  if (solve(nbvar, nbclauses, clauses)) { */
+  /*   printf("SATISFIABLE\n"); */
+  /* } else { */
+  /*   printf("UNSATISFIABLE\n"); */
+  /* } */
 
   int k;
   for (k=0; k<nbclauses; k++) {
