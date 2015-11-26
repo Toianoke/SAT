@@ -152,28 +152,31 @@ def cnf_strip(text):
 
 passed = 0
 failed = 0
+timed_out = 0
 def main_thread_sum_output(tally_dict):
-  global passed, failed
+  global passed, failed, timed_out
 
   printout = ["-"*80,
               tally_dict["source"],
               "Time: {}".format(tally_dict['time'])]
 
-  if tally_dict['expected'] == cnf_strip(tally_dict['actual']):
+  if "TIMED OUT" in tally_dict['actual']:
+    pass_fail = 2
+    timed_out += 1
+  elif tally_dict['expected'] == cnf_strip(tally_dict['actual']):
     pass_fail = 1
     passed += 1
   else:
     pass_fail = 0
     failed += 1
 
-  if "TIMED OUT" in tally_dict['actual']:
-    pass_fail = 2
+
   
   printout.append("Expected: {}".format(tally_dict['expected']))
   printout.append("Actual: {}".format(tally_dict['actual']))
 
   printout += [" Status: {}".format([red("fail"), green("pass"), yellow("timeout")][pass_fail])]
-  printout += [" Completed: {} / {}".format(passed+failed, total_tests)]
+  printout += [" Completed: {} / {}".format(passed+failed+timed_out, total_tests)]
   printout += ["", ""]
 
   if True: #pass_fail == False:
@@ -271,7 +274,8 @@ def main():
     LOG.info("".format(passed))
     LOG.info("Tests passed: {}".format(passed))
     LOG.info("Tests failed: {}".format(failed))
-    LOG.info("Total tests completed: {} / {}".format(failed+passed, total_tests))
+    LOG.info("Tests timed out: {}".format(timed_out))
+    LOG.info("Total tests completed: {} / {}".format(failed+passed+timed_out, total_tests))
     LOG.info("Total time: {}".format(end-start))
 
 
