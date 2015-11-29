@@ -157,7 +157,7 @@ def main_thread_sum_output(tally_dict):
               tally_dict["source"],
               "Time: {}".format(tally_dict['time'])]
 
-  if "no leaks are possible" in tally_dict['actual']:
+  if "ERROR SUMMARY: 0 errors" in tally_dict['actual']:
     pass_fail = True
     passed += 1
   else:
