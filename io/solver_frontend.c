@@ -24,7 +24,7 @@ error_on(int bool)
 /**
  * Prints "UNKNOWN\n" and exits with 0 condition when bool is true
  */
-void // TODO: may bee good to allow solver to use this func on bad mallocs
+static void // TODO: may bee good to allow solver to use this func on bad mallocs
 unknown_on(int bool)
 {
   if (bool) {

@@ -5,21 +5,112 @@
 #include <string.h>
 
 
-void free_formula(Formula * f);
-int is_unit_clause(Clause * c);
-int array_contains(int *arr, int length, int item);
+static void unknown_on(int bool);
+static int var_to_index(int v);
+static int index_to_var(int i);
+static int is_consistent_literals(Formula * f);
+static int contains_empty_clause(Formula * f);
+static int is_unit_clause(Clause * c);
+static void remove_var(Formula * f, int ci, int idx);
+static void remove_clause(int idx, Formula * f);
+static int propagate_unit_clause(Formula * fn, int ci, int n);
+static void propagate_unit(Formula * f, int n);
+static int has_single_polarity(int v, Formula * f);
+static int clause_contains(Clause * c, int v);
+static void remove_clauses_containing(Formula * f, int v);
+static void eliminate_pure_literals(Formula * f);
+static int pick_var_from_formula(Formula *f);
+static Formula * create_formula(int nv, int nc, int **in_clauses);
+static void free_formula(Formula *f);
+static int dpll(Formula *F, int level);
+static int clause_compare(const void* left, const void* right);
+
+
+static void
+add_var(Formula * f, int v)
+{
+  int i = var_to_index(v);
+  f->var_list[i]++;
+}
+
+
+static void
+reset_decision_level_clause(Formula * f, Clause * c, int level)
+{
+  int i, j;
+  for (i=c->stack_level; i>=0; i--) {
+    if (c->num_lits_stack[i].level <= level) {
+      break;
+    }
+  }
+  for (j=c->num_lits; j<c->num_lits_stack[i].length; j++) {
+    add_var(f, c->literals[j]);
+  }
+  c->num_lits = c->num_lits_stack[i].length;
+  c->stack_level = i;
+}
+
+
+static void
+reset_decision_level(Formula * f, int level)
+{
+  int i,j,k;
+  for (i=f->stack_level; i>=0; i--) {
+    if (f->num_clauses_stack[i].level <= level) {
+      break;
+    } 
+  }
+  for(k=f->num_clauses; k<f->num_clauses_stack[i].length; k++) {
+    for (j=0; j<f->clauses[k].num_lits; j++) {
+      add_var(f, f->clauses[k].literals[j]);
+    }
+  }
+  f->num_clauses = f->num_clauses_stack[i].length;
+  f->stack_level = i;
+  
+  for (i=0; i<f->num_clauses; i++) {
+    reset_decision_level_clause(f, &f->clauses[i], level);
+  }
+}
+
+static void
+set_decision_level_clause(Clause * c, int level)
+{
+  if (c->num_lits_stack[c->stack_level].length != c->num_lits) {
+    c->stack_level++;
+    c->num_lits_stack[c->stack_level].level = level;
+    c->num_lits_stack[c->stack_level].length = c->num_lits;
+  }
+}
+
+static void
+set_decision_level(Formula * f, int level)
+{
+  if (f->num_clauses_stack[f->stack_level].length != f->num_clauses) {
+    f->stack_level++;
+    f->num_clauses_stack[f->stack_level].level = level;
+    f->num_clauses_stack[f->stack_level].length = f->num_clauses;
+  }
+
+  int i;
+  for (i = 0; i<f->num_clauses; i++) {
+    set_decision_level_clause(&(f->clauses[i]), level);
+  }
+  
+}
   
 // TODO: make and use util version
-void error_on(int bool)
+static void unknown_on(int bool)
 {
   if (bool) {
-    printf("ERROR\n");
+    printf("UNKNOWN\n");
     exit(0);
   }
 }
 
 
-int var_to_index(int v) {
+static int var_to_index(int v)
+{
   assert(v != 0);
   if (v < 0) {
     return (-2)*v - 1;
@@ -29,7 +120,8 @@ int var_to_index(int v) {
 }
 
 
-int index_to_var(int i) {
+static int index_to_var(int i)
+{
   assert(i >= 0);
   if (i%2 == 1) {
     return -((i+1)/2);
@@ -42,7 +134,7 @@ int index_to_var(int i) {
 /**
  * TODO: comment is_consistent_literals
  */
-int is_consistent_literals(Formula * f)
+static int is_consistent_literals(Formula * f)
 {
   assert(f != NULL);
 
@@ -71,7 +163,7 @@ int is_consistent_literals(Formula * f)
  *              that is empty
  *         0 otherwise
  */
-int contains_empty_clause(Formula * f)
+static int contains_empty_clause(Formula * f)
 {
   assert(f != NULL);
 
@@ -90,7 +182,7 @@ int contains_empty_clause(Formula * f)
  * returns 1 if c contains exactly 1 variable
  *         0 otherwise
  */
-int is_unit_clause(Clause * c)
+static int is_unit_clause(Clause * c)
 {
   return c->num_lits == 1;
 }
@@ -99,7 +191,7 @@ int is_unit_clause(Clause * c)
 /**
  * TODO: comment remove_var
  */
-void remove_var(Formula * f, int ci, int idx)
+static void remove_var(Formula * f, int ci, int idx)
 {
   assert(f != NULL);
   assert(ci >= 0);
@@ -110,8 +202,9 @@ void remove_var(Formula * f, int ci, int idx)
   int v = f->clauses[ci].literals[idx];
   int i = var_to_index(v);
   f->var_list[i] -= 1;
+  int temp =   f->clauses[ci].literals[idx];
   f->clauses[ci].literals[idx] = f->clauses[ci].literals[f->clauses[ci].num_lits-1];
-  f->clauses[ci].literals[f->clauses[ci].num_lits-1] = 0;
+  f->clauses[ci].literals[f->clauses[ci].num_lits-1] = temp;
   f->clauses[ci].num_lits--;
 }
 
@@ -119,7 +212,7 @@ void remove_var(Formula * f, int ci, int idx)
 /**
  * TODO: comment remove_clause
  */
-void remove_clause(int idx, Formula * f)
+static void remove_clause(int idx, Formula * f)
 {
   assert(f != NULL);
   assert(idx >= 0);
@@ -134,6 +227,7 @@ void remove_clause(int idx, Formula * f)
     int j = var_to_index(v);
     f->var_list[j] -= 1;
   }
+  
   f->num_clauses--;
 }
 
@@ -141,7 +235,7 @@ void remove_clause(int idx, Formula * f)
 /**
  * TODO: comment propagate_unit_clause
  */
-int propagate_unit_clause(Formula * fn, int ci, int n)
+static int propagate_unit_clause(Formula * fn, int ci, int n)
 {
   assert(fn != NULL);
   assert(ci >= 0);
@@ -166,7 +260,7 @@ int propagate_unit_clause(Formula * fn, int ci, int n)
 /**
  * TODO: comment propagat_unit_inplace
  */
-void propagate_unit_inplace(Formula * f, int n)
+static void propagate_unit(Formula * f, int n)
 {
   assert(f != NULL);
   assert(n != 0);
@@ -181,29 +275,9 @@ void propagate_unit_inplace(Formula * f, int n)
 
 
 /**
- * for each clause c in f:
- *   if n appears in c:
- *     remove c from f
- *   if -n appears in c:
- *     remove -n from c
- */
-Formula * propagate_unit(Formula * f, int n)
-{
-  assert(f != NULL);
-  assert(n != 0);
-
-  Formula * fn = copy_formula(f);
-
-  propagate_unit_inplace(fn, n);
-
-  return fn;
-}
-
-
-/**
  * TODO: comment has_single_polarity
  */
-int has_single_polarity(int v, Formula * f)
+static int has_single_polarity(int v, Formula * f)
 {
   assert(f != NULL);
   assert(v != 0);
@@ -218,7 +292,7 @@ int has_single_polarity(int v, Formula * f)
  * Returns true if clause c contains variable v,
  * false, otherwise.
  */
-int clause_contains(Clause * c, int v)
+static int clause_contains(Clause * c, int v)
 {
   assert(c != NULL);
   assert(v != 0);
@@ -237,7 +311,7 @@ int clause_contains(Clause * c, int v)
 /**
  * TODO: comment remove_clauses_containing
  */
-void remove_clauses_containing(Formula * f, int v)
+static void remove_clauses_containing(Formula * f, int v)
 {
   assert(f != NULL);
   assert(v != 0);
@@ -256,7 +330,7 @@ void remove_clauses_containing(Formula * f, int v)
  * for any variable v in F with a single polarity
  *   remove every clause in which v occurs
  */
-void eliminate_pure_literals(Formula * f)
+static void eliminate_pure_literals(Formula * f)
 {
   assert(f != NULL);
 
@@ -276,7 +350,7 @@ void eliminate_pure_literals(Formula * f)
 /**
  * return a variable that occurs in f
  */
-int pick_var_from_formula(Formula *f)
+static int pick_var_from_formula(Formula *f)
 {
   assert(f != NULL);
   int i;
@@ -298,7 +372,7 @@ int pick_var_from_formula(Formula *f)
  * of arrays of ints, representing each clause
  * in the formula
  */
-Formula * create_formula(int nv, int nc, int **in_clauses)
+static Formula * create_formula(int nv, int nc, int **in_clauses)
 {
   assert(in_clauses != NULL);
   assert(nv > 0);
@@ -308,17 +382,22 @@ Formula * create_formula(int nv, int nc, int **in_clauses)
   Clause *cp;
 
   Formula *f = malloc(sizeof(Formula));
-  error_on(f == NULL);
+  unknown_on(f == NULL);
   
+  f->num_clauses_stack = malloc(sizeof(decision)*(nc));
+  unknown_on(f->num_clauses_stack == NULL);
+  f->stack_level = 0;
+  f->num_clauses_stack[0].level = -1;
+  f->num_clauses_stack[0].length = nc;
   f->num_clauses = nc;
-  f->original_clauses = nc;
+  
   f->original_vars = nv;
   f->var_list = malloc(sizeof(int)*2*nv);
-  error_on(f->var_list == NULL);
+  unknown_on(f->var_list == NULL);
   memset(f->var_list, 0 , sizeof(int)*2*nv);
   
   f->clauses = malloc(sizeof(Clause)*nc);
-  error_on(f->clauses == NULL);
+  unknown_on(f->clauses == NULL);
   
   cp = f->clauses;
 
@@ -328,9 +407,16 @@ Formula * create_formula(int nv, int nc, int **in_clauses)
       count++;
     }
     
+    cp->num_lits_stack = malloc(sizeof(decision)*(count));
+    unknown_on(cp->num_lits_stack == NULL);
+    cp->stack_level = 0;
+    cp->num_lits_stack[0].level = -1;
+    cp->num_lits_stack[0].length = count;
     cp->num_lits = count;
+    
+    
     cp->literals = malloc(sizeof(int)*(count));
-    error_on(cp->literals == NULL);
+    unknown_on(cp->literals == NULL);
     
     for (j = 0; j < count; j++) {
       f->clauses[i].literals[j] = in_clauses[i][j];
@@ -340,63 +426,31 @@ Formula * create_formula(int nv, int nc, int **in_clauses)
     
     cp++;
   }
-  
+
+  qsort(f->clauses, nc, sizeof(Clause), clause_compare);
   return f;
-}
-
-
-/**
- * TODO: comment copy_formula
- */
-Formula* copy_formula(Formula *f)
-{
-  assert(f != NULL);
-  
-  Formula * new_f = malloc(sizeof(Formula));
-  error_on(new_f == NULL);
-
-  new_f->num_clauses = f->num_clauses;
-  new_f->original_clauses = f->num_clauses;
-  new_f->original_vars = f->original_vars;
-  
-  new_f->var_list = malloc(sizeof(int)*f->original_vars*2);
-  error_on(new_f->var_list == NULL);
-
-  memcpy(new_f->var_list, f->var_list, sizeof(int)*f->original_vars*2);
-  
-  new_f->clauses = malloc(sizeof(Clause)*f->num_clauses);
-  error_on(new_f->clauses == NULL);
-
-  int i;
-  for (i = 0; i < new_f->num_clauses; i++) {
-    Clause * cp = &f->clauses[i];
-    Clause * new_cp = &new_f->clauses[i];
-    new_cp->num_lits = cp->num_lits;
-
-    new_cp->literals = malloc(sizeof(int)*(cp->num_lits));
-    error_on(new_cp->literals == NULL);
-    
-    memcpy(new_cp->literals, cp->literals, sizeof(int)*(cp->num_lits));
-  }
-  
-  return new_f;
 }
 
 
 /**
  * TODO: comment free_formula
  */
-void free_formula(Formula *f)
+static void free_formula(Formula *f)
 {
   assert(f != NULL);
   
   int i;
-  for (i=0; i<f->original_clauses; i++) {
+  for (i=0; i<f->num_clauses_stack[0].length; i++) {
     free(f->clauses[i].literals);
     f->clauses[i].literals = NULL;
+    free(f->clauses[i].num_lits_stack);
+    f->clauses[i].num_lits_stack = NULL;
   }
   free(f->clauses);
   f->clauses = NULL;
+
+  free(f->num_clauses_stack);
+  f->num_clauses_stack = NULL;
   
   free(f->var_list);
   f->var_list = NULL;
@@ -409,11 +463,9 @@ void free_formula(Formula *f)
 /**
  * TODO: comment dpll
  */
-int dpll(Formula *F)
+static int dpll(Formula *F, int level)
 {
   assert(F != NULL);
-
-  Formula * original = F;
   
   if (is_consistent_literals(F)) {
     return 1;
@@ -426,46 +478,30 @@ int dpll(Formula *F)
   int i;
   for (i=0; i<F->num_clauses; i++) {
     if (is_unit_clause(&F->clauses[i])) {
-      if (F == original) {
-	F = copy_formula(original);
-      }
-      propagate_unit_inplace(F, F->clauses[i].literals[0]);
+      propagate_unit(F, F->clauses[i].literals[0]);
     }
   }
 
   eliminate_pure_literals(F);
 
-
+  set_decision_level(F, level);
+  
   /* pick one variable v */
   int v = pick_var_from_formula(F);
 
-  if (v == 0) {
-    if (F != original) {
-      free_formula(F);      
-    }
-    return 0;
+  propagate_unit(F, v);
+  if (dpll(F, level+1)) {
+    return 1;
   }
 
-  Formula * temp = F;
-  F = propagate_unit(temp, v);
-  int retval = dpll(F);
-  free_formula(F);
-
-  if (!retval) {
-    F = propagate_unit(temp, ((-1)*v));
-    retval = dpll(F);
-    free_formula(F);
-  }
-
-  if (temp != original) {
-    free_formula(temp);
-  }
-  return retval;
+  reset_decision_level(F, level);
+  propagate_unit(F, ((-1)*v));
+  return dpll(F, level+1);
   //return dpll(propagate_unit(F, v)) || dpll(propagate_unit(F, ((-1)*v)));
 }
 
 
-int clause_compare(const void* left, const void* right)
+static int clause_compare(const void* left, const void* right)
 {
   return ((Clause *)right)->num_lits - ((Clause *) left)->num_lits;
 }
@@ -480,8 +516,7 @@ int solve(int nv, int nc, int **clauses)
   assert(nc > 0);
 
   Formula *f = create_formula(nv, nc, clauses);
-  qsort(f->clauses, nc, sizeof(Clause), clause_compare);
-  int retval = dpll(f);
+  int retval = dpll(f, 0);
   free_formula(f);
   
   return retval;
