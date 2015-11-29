@@ -384,7 +384,7 @@ static Formula * create_formula(int nv, int nc, int **in_clauses)
   Formula *f = malloc(sizeof(Formula));
   unknown_on(f == NULL);
   
-  f->num_clauses_stack = malloc(sizeof(decision)*(nc));
+  f->num_clauses_stack = malloc(sizeof(decision)*(nc+1));
   unknown_on(f->num_clauses_stack == NULL);
   f->stack_level = 0;
   f->num_clauses_stack[0].level = -1;
@@ -407,7 +407,7 @@ static Formula * create_formula(int nv, int nc, int **in_clauses)
       count++;
     }
     
-    cp->num_lits_stack = malloc(sizeof(decision)*(count));
+    cp->num_lits_stack = malloc(sizeof(decision)*(count+1));
     unknown_on(cp->num_lits_stack == NULL);
     cp->stack_level = 0;
     cp->num_lits_stack[0].level = -1;
